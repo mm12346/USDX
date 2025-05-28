@@ -720,16 +720,35 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Your web app's Firebase configuration (provided by user)
+        const firebaseConfig = {
+            apiKey: "AIzaSyB9xHmmBOgq6NLncJNk0tBsygjsmhKqA4c",
+            authDomain: "usd-tracker-app.firebaseapp.com",
+            projectId: "usd-tracker-app",
+            storageBucket: "usd-tracker-app.firebasestorage.app",
+            messagingSenderId: "243448319635",
+            appId: "1:243448319635:web:95a3d5b01bcb53d68a4766"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
         // Global variables for Firebase (will be initialized in DOMContentLoaded)
-        window.firebaseApp = null;
-        window.db = null;
-        window.auth = null;
-        window.userId = null;
+        window.firebaseApp = app; // Use the initialized app
+        window.db = db; // Use the initialized db
+        window.auth = auth; // Use the initialized auth
+        window.userId = null; // Will be set by onAuthStateChanged
         window.userSheetId = null; // To store the user's specific Google Sheet ID
+
+        // Define a fixed appId for Firestore path since Canvas's __app_id is not available
+        // This ensures data is stored under a consistent application identifier in Firestore.
+        const APP_ID_FOR_FIRESTORE = 'usd-tracker-app-standalone'; // Use your Firebase projectId or a unique identifier
+
         let swiperInstance = null; // Declare swiperInstance globally or pass it
 
 
@@ -1229,7 +1248,7 @@
 
             // Check if userSheetId is set
             if (!window.userSheetId) {
-                showNotification(errorNotification, 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
+                showNotification(errorNotification, 'กรุณาเข้าสู่ระบบและตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
                 loadingOverlay.classList.add('hidden');
                 return false;
             }
@@ -1297,7 +1316,7 @@
         // Function to delete a record from Google Sheet (moved to global scope)
         async function deleteRecord(originalRowIndex, sheetName) { // Added sheetName parameter
             if (!window.userSheetId) {
-                showNotification(errorNotification, 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
+                showNotification(errorNotification, 'กรุณาเข้าสู่ระบบและตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
                 return;
             }
 
@@ -1350,7 +1369,7 @@
 
             // Check if userSheetId is set
             if (!window.userSheetId) {
-                historyList.innerHTML = '<p class="text-red-500 text-center py-4">กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน</p>';
+                historyList.innerHTML = '<p class="text-red-500 text-center py-4">กรุณาเข้าสู่ระบบและตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน</p>';
                 return;
             }
 
@@ -1629,7 +1648,7 @@
 
             // Check if userSheetId is available before fetching data
             if (!window.userSheetId) {
-                const noSheetIdMessage = '<p class="text-red-500 text-center py-4">กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่า</p>';
+                const noSheetIdMessage = '<p class="text-red-500 text-center py-4">กรุณาเข้าสู่ระบบและตั้งค่า Google Sheet ID ในหน้าตั้งค่า</p>';
                 totalCardEl.innerHTML = noSheetIdMessage;
                 ratesCardEl.innerHTML = noSheetIdMessage;
                 buyCardEl.innerHTML = noSheetIdMessage;
@@ -1707,84 +1726,6 @@
         }
 
 
-        // This function will be called once the DOM is fully loaded.
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Retrieve global variables provided by the Canvas environment
-            // __app_id, __firebase_config, __initial_auth_token are injected by the environment.
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-
-            // Initialize Firebase if config is available and not already initialized
-            if (Object.keys(firebaseConfig).length > 0 && !window.firebaseApp) {
-                window.firebaseApp = initializeApp(firebaseConfig);
-                window.db = getFirestore(window.firebaseApp);
-                window.auth = getAuth(window.firebaseApp);
-
-
-                // Authenticate user using custom token or anonymously
-                try {
-                    if (initialAuthToken) {
-                        await signInWithCustomToken(window.auth, initialAuthToken);
-                        console.log("Firebase authentication successful with custom token.");
-                    } else {
-                        await signInAnonymously(window.auth);
-                        console.log("Firebase anonymous authentication successful.");
-                    }
-                } catch (error) {
-                    console.error("Firebase authentication failed:", error);
-                    // Handle authentication failure, e.g., show an an error message
-                }
-
-
-                // Listen for auth state changes to get userId and fetch user's sheet ID
-                onAuthStateChanged(window.auth, async (user) => {
-                    if (user) {
-                        window.userId = user.uid;
-                        console.log("User ID:", window.userId);
-                        // Update the displayed user ID in the settings tab
-                        const displayUserIdElement = document.getElementById('displayUserId');
-                        if (displayUserIdElement) {
-                            displayUserIdElement.textContent = window.userId;
-                        }
-                        await fetchUserSheetId(); // Fetch user's sheet ID
-
-                        initializeAppComponent(); // Initialize app components (including Swiper)
-
-                        // After fetching sheet ID, decide what to do
-                        if (window.userSheetId) {
-                            fetchSummary(); // Load summary data immediately if sheet ID exists
-                        } else {
-                            // Show notification and navigate to settings if no sheet ID
-                            showNotification(document.getElementById('errorNotification'), 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
-                            if (swiperInstance) {
-                                swiperInstance.slideTo(3); // Navigate to settings tab (assuming index 3)
-                            }
-                        }
-                    } else {
-                        window.userId = null;
-                        window.userSheetId = null;
-                        console.log("No user signed in.");
-                        const displayUserIdElement = document.getElementById('displayUserId');
-                        if (displayUserIdElement) {
-                            displayUserIdElement.textContent = 'N/A';
-                        }
-                        initializeAppComponent(); // Initialize app components even if no user
-                        showNotification(document.getElementById('errorNotification'), 'ไม่สามารถโหลดข้อมูลได้: โปรดเข้าสู่ระบบหรือตั้งค่า Google Sheet ID');
-                        if (swiperInstance) {
-                            swiperInstance.slideTo(3); // Navigate to settings tab
-                        }
-                    }
-                });
-            } else {
-                console.warn("Firebase config not found or already initialized. Proceeding without Firebase.");
-                // If Firebase cannot be initialized, still try to run the app components
-                initializeAppComponent();
-            }
-        });
-
-
         // Function to fetch the user's Google Sheet ID from Firestore
         async function fetchUserSheetId() {
             if (!window.db || !window.userId) {
@@ -1796,7 +1737,8 @@
             }
             try {
                 // Construct the document reference for the user's sheet ID
-                const userSheetDocRef = doc(window.db, `artifacts/${__app_id}/users/${window.userId}/sheets/userSheet`);
+                // Using a fixed APP_ID_FOR_FIRESTORE as __app_id is not available outside Canvas
+                const userSheetDocRef = doc(window.db, `artifacts/${APP_ID_FOR_FIRESTORE}/users/${window.userId}/sheets/userSheet`);
                 const docSnap = await getDoc(userSheetDocRef); // Get the document snapshot
                 if (docSnap.exists()) {
                     window.userSheetId = docSnap.data().sheetId; // Extract the sheetId
@@ -1826,7 +1768,8 @@
             }
             try {
                 // Construct the document reference for the user's sheet ID
-                const userSheetDocRef = doc(window.db, `artifacts/${__app_id}/users/${window.userId}/sheets/userSheet`);
+                // Using a fixed APP_ID_FOR_FIRESTORE as __app_id is not available outside Canvas
+                const userSheetDocRef = doc(window.db, `artifacts/${APP_ID_FOR_FIRESTORE}/users/${window.userId}/sheets/userSheet`);
                 await setDoc(userSheetDocRef, { sheetId: sheetId }); // Set the document with the new sheet ID
                 window.userSheetId = sheetId; // Update global variable
                 console.log("User's Google Sheet ID saved to Firestore:", sheetId);
@@ -1837,6 +1780,36 @@
             }
         }
 
+        // Function to handle Google Sign-in
+        async function signInWithGoogle() {
+            const provider = new GoogleAuthProvider();
+            try {
+                // Log the current origin to help debug auth/unauthorized-domain errors
+                console.log("Current window origin:", window.location.origin);
+                await signInWithPopup(auth, provider);
+                // onAuthStateChanged will handle setting userId and initializing app components
+            } catch (error) {
+                console.error("Error during Google Sign-in:", error);
+                // Specific error for unauthorized domain
+                if (error.code === 'auth/unauthorized-domain') {
+                    showNotification(errorNotification, 'เข้าสู่ระบบไม่สำเร็จ: โดเมนไม่ได้รับอนุญาต. โปรดเพิ่มโดเมนปัจจุบันของคุณ (' + window.location.origin + ') ใน Firebase Console > Authentication > Settings > Authorized domains.');
+                } else {
+                    showNotification(errorNotification, 'เข้าสู่ระบบไม่สำเร็จ: ' + error.message);
+                }
+            }
+        }
+
+        // Function to handle user sign-out
+        async function signOutUser() {
+            try {
+                await signOut(auth);
+                // onAuthStateChanged will handle resetting userId and UI
+                showNotification(successNotification, 'ออกจากระบบสำเร็จ');
+            } catch (error) {
+                console.error("Error during sign out:", error);
+                showNotification(errorNotification, 'ออกจากระบบไม่สำเร็จ: ' + error.message);
+            }
+        }
 
         // Main application initialization function.
         // This function is called after Firebase authentication and sheet ID fetching are attempted.
@@ -1868,6 +1841,9 @@
             const sheetIdInput = document.getElementById('sheetIdInput');
             const saveSheetIdButton = document.getElementById('saveSheetIdButton');
             const displayUserId = document.getElementById('displayUserId');
+            const signInButton = document.getElementById('signInButton'); // New sign-in button
+            const signOutButton = document.getElementById('signOutButton'); // New sign-out button
+
 
             // Theme toggle elements
             const themeToggle = document.getElementById('themeToggle');
@@ -1896,7 +1872,7 @@
                                 fetchSummary();
                             } else {
                                 // If no sheet ID, clear summary cards and prompt user
-                                const noSheetIdMessage = '<p class="text-red-500 text-center py-4">กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่า</p>';
+                                const noSheetIdMessage = '<p class="text-red-500 text-center py-4">กรุณาเข้าสู่ระบบและตั้งค่า Google Sheet ID ในหน้าตั้งค่า</p>';
                                 totalCardEl.innerHTML = noSheetIdMessage;
                                 ratesCardEl.innerHTML = noSheetIdMessage;
                                 buyCardEl.innerHTML = noSheetIdMessage;
@@ -2012,7 +1988,7 @@
 
                 // Check if userSheetId is set
                 if (!window.userSheetId) {
-                    showNotification(errorNotification, 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
+                    showNotification(errorNotification, 'กรุณาเข้าสู่ระบบและตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
                     return;
                 }
 
@@ -2093,7 +2069,7 @@
                 }
 
                 if (!window.userSheetId) {
-                    showNotification(errorNotification, 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
+                    showNotification(errorNotification, 'กรุณาเข้าสู่ระบบและตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
                     return;
                 }
 
@@ -2272,10 +2248,74 @@
                 }
             });
 
+            // Event listeners for new sign-in/sign-out buttons
+            if (signInButton) {
+                signInButton.addEventListener('click', signInWithGoogle);
+            }
+            if (signOutButton) {
+                signOutButton.addEventListener('click', signOutUser);
+            }
 
             // Initial calls are now managed by the onAuthStateChanged listener
             // fetchSummary() will be called once Firebase authentication is complete and userSheetId is fetched.
         }
+
+        // This function will be called once the DOM is fully loaded.
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Listen for auth state changes to get userId and fetch user's sheet ID
+            onAuthStateChanged(window.auth, async (user) => {
+                const displayUserIdElement = document.getElementById('displayUserId');
+                const signInButton = document.getElementById('signInButton');
+                const signOutButton = document.getElementById('signOutButton');
+
+                if (user) {
+                    window.userId = user.uid;
+                    console.log("User ID:", window.userId);
+                    if (displayUserIdElement) {
+                        displayUserIdElement.textContent = window.userId;
+                    }
+                    if (signInButton) signInButton.classList.add('hidden');
+                    if (signOutButton) signOutButton.classList.remove('hidden');
+
+                    await fetchUserSheetId(); // Fetch user's sheet ID
+
+                    // After fetching sheet ID, decide what to do
+                    if (window.userSheetId) {
+                        fetchSummary(); // Load summary data immediately if sheet ID exists
+                    } else {
+                        // Show notification and navigate to settings if no sheet ID
+                        showNotification(document.getElementById('errorNotification'), 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
+                        if (swiperInstance) {
+                            swiperInstance.slideTo(3); // Navigate to settings tab (assuming index 3)
+                        }
+                    }
+                } else {
+                    window.userId = null;
+                    window.userSheetId = null;
+                    console.log("No user signed in.");
+                    if (displayUserIdElement) {
+                        displayUserIdElement.textContent = 'N/A (ไม่ได้เข้าสู่ระบบ)';
+                    }
+                    if (signInButton) signInButton.classList.remove('hidden');
+                    if (signOutButton) signOutButton.classList.add('hidden');
+
+                    // Clear summary and history if no user is logged in
+                    const noAuthMessage = '<p class="text-gray-500 text-center py-4">โปรดเข้าสู่ระบบเพื่อดูข้อมูล</p>';
+                    totalCardEl.innerHTML = noAuthMessage;
+                    ratesCardEl.innerHTML = noAuthMessage;
+                    buyCardEl.innerHTML = noAuthMessage;
+                    profitLossCardEl.innerHTML = noAuthMessage;
+                    historyList.innerHTML = noAuthMessage;
+
+                    showNotification(document.getElementById('errorNotification'), 'โปรดเข้าสู่ระบบเพื่อใช้งาน');
+                    if (swiperInstance) {
+                        swiperInstance.slideTo(3); // Navigate to settings tab
+                    }
+                }
+                // Initialize app components only once, after the initial auth state is determined
+                initializeAppComponent();
+            });
+        });
     </script>
 </head>
 <body>
@@ -2494,6 +2534,17 @@
                                     <span id="displayUserId" class="text-gray-400 text-sm break-all">กำลังโหลด...</span>
                                 </div>
                                 <p class="text-xs text-gray-500 mt-1">ใช้สำหรับแยกข้อมูลผู้ใช้</p>
+                            </div>
+
+                            <div class="p-4 border border-gray-700 rounded-md">
+                                <h3 class="font-medium text-gray-100 mb-2">การเข้าสู่ระบบ</h3>
+                                <button id="signInButton" class="w-full form-button mb-2">
+                                    เข้าสู่ระบบด้วย Google
+                                </button>
+                                <button id="signOutButton" class="w-full form-button bg-red-500 hover:bg-red-600 hidden">
+                                    ออกจากระบบ
+                                </button>
+                                <p class="text-xs text-gray-500 mt-1">เข้าสู่ระบบเพื่อบันทึกข้อมูลของคุณ</p>
                             </div>
 
 

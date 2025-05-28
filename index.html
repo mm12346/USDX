@@ -1,0 +1,2609 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บันทึกการซื้อ USD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <style>
+        /* Custom styles for smooth scrolling and fixed bottom nav */
+        body {
+            font-family: 'Prompt', sans-serif;
+            overflow: hidden; /* Prevent body scrolling, Swiper will handle it */
+            height: 100vh; /* Ensure body takes full viewport height */
+            display: flex;
+            flex-direction: column;
+            background-color: #121212; /* Very dark background for the body */
+            color: #E5E7EB; /* Light gray text for general content */
+        }
+
+        .swiper {
+            width: 100%;
+            height: calc(100vh - 80px); /* Adjust this value if bottom-nav height changes */
+            flex-grow: 1; /* Allow Swiper to take available space */
+        }
+
+        .swiper-slide {
+            height: 100%; /* Ensure slide takes full height of its container */
+            overflow-y: auto; /* Enable vertical scrolling within each slide */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS devices */
+            padding-bottom: 20px; /* Add some padding to the bottom of each slide content */
+            background-color: #121212; /* Very dark background for slides */
+        }
+
+        /* Hide scrollbar for Webkit browsers (Chrome, Safari) */
+        .swiper-slide::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for Firefox */
+        .swiper-slide {
+            scrollbar-width: none;
+        }
+
+        .container {
+            padding: 1.5rem; /* Default padding */
+            max-width: 960px; /* Max width for content */
+            margin-left: auto;
+            margin-right: auto;
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+
+        /* Fixed bottom navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #1E1E1E; /* Darker gray for bottom nav */
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+            padding: 10px 0;
+            z-index: 100; /* Ensure it's above other content */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80px; /* Fixed height for the nav bar */
+        }
+
+        .bottom-nav .grid {
+            width: 100%;
+            max-width: 400px; /* Limit width for better mobile display */
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 0;
+            cursor: pointer;
+            color: #6B7280; /* Gray-500 for inactive */
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-item.active {
+            color: #60A5FA; /* Blue-400 for active */
+        }
+
+        .nav-item .emoji {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+        }
+
+        .nav-item .label {
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 500; /* font-medium */
+        }
+
+        .page-indicator {
+            display: flex;
+            justify-content: center;
+            margin-top: 5px;
+            position: absolute;
+            bottom: 5px; /* Position indicators below the nav items */
+            width: 100%;
+        }
+
+        .indicator {
+            width: 8px;
+            height: 8px;
+            background-color: #4B5563; /* Gray-700 for inactive */
+            border-radius: 50%;
+            margin: 0 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .indicator.active {
+            background-color: #60A5FA; /* Blue-400 for active */
+        }
+
+
+        /* General card styles */
+        .summary-card {
+            background-color: #2C2C2E; /* Darker gray for card background */
+            border-radius: 1rem; /* More rounded corners */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); /* darker shadow */
+            padding: 1.5rem; /* p-6 */
+            display: flex;
+            flex-direction: column;
+            color: #E5E7EB; /* Light gray text */
+            transition: background-color 0.3s ease; /* Smooth transition for background */
+            position: relative; /* For icon positioning */
+            min-height: 150px; /* Ensure a minimum height for cards */
+            justify-content: space-between; /* Distribute content */
+        }
+
+        .summary-card.card-on {
+            background-color: #5C5CFF; /* Blue from image for active state */
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            font-size: 2.5rem; /* Larger icon size */
+            color: #E5E7EB; /* Light gray icon color */
+        }
+
+        .card-title {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            color: #E5E7EB; /* Light gray for title */
+            margin-bottom: 0.5rem; /* mb-2 */
+        }
+
+        .card-status {
+            font-size: 0.875rem; /* text-sm */
+            color: #9CA3AF; /* Gray-400 for status */
+            margin-bottom: 1rem;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed #4B5563; /* Darker gray dashed border */
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            font-size: 0.875rem; /* text-sm */
+            color: #9CA3AF; /* Gray-400 */
+        }
+
+        .summary-value {
+            font-size: 1rem; /* text-base */
+            font-weight: 500; /* font-medium */
+            color: #F3F4F6; /* Lighter gray for values */
+        }
+
+        .highlight-value {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            color: #FBBF24; /* Yellow-400 for highlights */
+        }
+        .profit-value {
+            color: #10B981; /* Green for profit */
+        }
+        .loss-value {
+            color: #EF4444; /* Red for loss */
+        }
+
+        /* Loader styles */
+        .loader {
+            border-top-color: #60A5FA; /* Blue-400 */
+            -webkit-animation: spinner 1.2s linear infinite;
+            animation: spinner 1.2s linear infinite;
+        }
+
+        @-webkit-keyframes spinner {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Notification styles */
+        #successNotification, #errorNotification {
+            min-width: 250px;
+        }
+
+        /* Editable field styles */
+        .editable-field {
+            display: flex;
+            align-items: center;
+        }
+
+        .editable-field input {
+            border: 1px solid #4B5563; /* Darker gray border */
+            background-color: #2C2C2E; /* Match card background */
+            color: #F3F4F6; /* Light text */
+            border-radius: 0.25rem; /* rounded-md */
+            padding: 0.25rem 0.5rem;
+            width: 80px; /* Adjust width as needed */
+            font-size: 0.875rem;
+            margin-right: 0.5rem;
+        }
+
+        .edit-button, .save-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9CA3AF; /* Gray-400 */
+            transition: color 0.2s ease;
+        }
+
+        .edit-button:hover {
+            color: #60A5FA; /* Blue-400 */
+        }
+
+        .save-button {
+            background-color: #60A5FA; /* Blue-400 */
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .save-button:hover {
+            background-color: #3B82F6; /* Blue-500 */
+        }
+
+        /* Toggle switch for settings and cards */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px; /* Wider toggle */
+            height: 24px; /* Taller toggle */
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #6B7280; /* Gray-500 for off state */
+            transition: .3s;
+            border-radius: 24px; /* Rounded slider */
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; /* Smaller circle */
+            width: 18px; /* Smaller circle */
+            left: 3px; /* Adjust position */
+            bottom: 3px; /* Adjust position */
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #FBBF24; /* Yellow-400 for on state */
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px); /* Move circle to the right */
+        }
+
+        /* TradingView widget container styles */
+        .tradingview-widget-container {
+            min-height: 300px; /* Ensure enough height for the chart */
+            width: 100%;
+            background-color: #2C2C2E; /* Darker gray for card background */
+            border-radius: 1rem; /* More rounded corners */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); /* darker shadow */
+            padding: 1.5rem; /* p-6 */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Specific styling for the TradingView widget's internal div */
+        .tradingview-widget-container__widget {
+            height: 100%; /* Make sure the widget takes full height of its container */
+            width: 100%;
+        }
+
+        /* Adjust input field styles for dark theme */
+        input[type="date"],
+        input[type="number"],
+        input[type="text"] {
+            background-color: #121212; /* Even darker background for inputs */
+            color: #E5E7EB;
+            border-color: #4B5563;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1); /* Invert color for dark theme */
+        }
+        select {
+            background-color: #121212;
+            color: #E5E7EB;
+            border-color: #4B5563;
+        }
+
+        /* History list items */
+        .history-item {
+            border-left: 4px solid; /* Border will be dynamic (buy/sell) */
+            padding: 0; /* Remove padding from here, it will be on swipe-content */
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            color: #E5E7EB;
+            position: relative; /* For delete button positioning */
+            overflow: hidden; /* Hide overflowing delete button initially */
+        }
+
+        .history-item.buy {
+            border-left-color: #5C5CFF; /* Matching total card active (dark) */
+            background-color: #3A3A50; /* Slightly darker tint of the new blue */
+        }
+
+        .history-item.sale {
+            border-left-color: #EF4444; /* Red for sale */
+            background-color: #4A2C2C; /* Dark red for sale */
+        }
+
+        .swipe-container {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            border-radius: 0.75rem; /* Match parent border-radius */
+        }
+
+        .swipe-content {
+            padding: 1rem; /* Apply padding here */
+            /* background-color will be inherited from .history-item.buy or .history-item.sale */
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: 2; /* Ensure content is above delete button */
+            cursor: grab; /* Indicate it's draggable */
+        }
+
+        .swipe-content.dragging {
+            cursor: grabbing;
+        }
+
+        .delete-reveal {
+            position: absolute;
+            top: 0;
+            right: 0; /* Align to the right */
+            bottom: 0;
+            width: 80px; /* Width of the delete button area */
+            background-color: #EF4444; /* Red background for delete */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1; /* Behind the swipe-content */
+            transform: translateX(100%); /* Initially off-screen to the right */
+            transition: transform 0.3s ease;
+        }
+
+        .swipe-content.swiped {
+            transform: translateX(-80px); /* Move content left to reveal delete */
+        }
+
+        .delete-reveal.revealed {
+            transform: translateX(0); /* Bring delete button into view */
+        }
+
+        .history-item .font-medium {
+            color: #F3F4F6;
+        }
+        /* Adjust font-semibold for buy/sell history items */
+        .history-item.buy .font-semibold {
+            color: #60A5FA; /* Blue for USD amount in buy history */
+        }
+        body.light-theme .history-item.buy .font-semibold {
+            color: #2563EB; /* Darker blue for USD amount in light theme buy history */
+        }
+        .history-item.sale .font-semibold {
+            color: #EF4444; /* Red for USD amount in sale history */
+        }
+        body.light-theme .history-item.sale .font-semibold {
+            color: #DC2626; /* Darker red for USD amount in light theme sale history */
+        }
+
+        .history-item .text-sm {
+            color: #9CA3AF;
+        }
+        .delete-button {
+            background: none;
+            border: none;
+            color: white; /* White icon on red background */
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
+        }
+        .delete-button:hover {
+            background-color: rgba(255, 255, 255, 0.2); /* Light overlay on hover */
+        }
+
+        /* Form button - matching total card active */
+        .form-button {
+            background-color: #5C5CFF; /* Matching total card active (dark) */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .form-button:hover {
+            background-color: #4A4AF0; /* Slightly darker hover for new blue */
+        }
+
+        /* New style for sale button */
+        .sale-button {
+            background-color: #EF4444; /* Red for sale button */
+        }
+        .sale-button:hover {
+            background-color: #DC2626; /* Darker red on hover */
+        }
+
+
+        /* Toggle between forms (Buy/Sell) */
+        .form-toggle-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            background-color: #1E1E1E;
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+        }
+
+        .form-toggle-button {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            color: #9CA3AF;
+            background-color: transparent;
+        }
+
+        /* Active state for Buy toggle button - matching total card active */
+        .form-toggle-button.active-toggle {
+            background-color: #5C5CFF; /* Matching total card active (dark) */
+            color: white;
+        }
+
+        /* Active state for Sale toggle button - red */
+        .form-toggle-button.active-sale-toggle {
+            background-color: #EF4444; /* Red for sale button */
+            color: white;
+        }
+
+
+        /* Light Theme */
+        body.light-theme {
+            background-color: #F3F4F6; /* Light background */
+            color: #1F2937; /* Dark text */
+        }
+        body.light-theme .swiper-slide {
+            background-color: #F3F4F6;
+        }
+        body.light-theme .bottom-nav {
+            background-color: #FFFFFF; /* White for bottom nav */
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+        body.light-theme .nav-item {
+            color: #6B7280; /* Gray-500 */
+        }
+        body.light-theme .nav-item.active {
+            color: #2563EB; /* Blue-600 */
+        }
+        body.light-theme .indicator {
+            background-color: #D1D5DB; /* Gray-300 */
+        }
+        body.light-theme .indicator.active {
+            background-color: #2563EB; /* Blue-600 */
+        }
+        body.light-theme .summary-card {
+            background-color: #FFFFFF; /* White for card background */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        body.light-theme .summary-card.card-on {
+            background-color: #DBEAFE; /* Light blue for active state */
+        }
+        body.light-theme .card-title {
+            color: #1E40AF; /* Blue-800 */
+        }
+        body.light-theme .card-status {
+            color: #4B5563; /* Gray-700 */
+        }
+        body.light-theme .summary-label {
+            color: #4B5563; /* Gray-700 */
+        }
+        body.light-theme .summary-value {
+            color: #1F2937; /* Gray-900 */
+        }
+        body.light-theme .highlight-value {
+            color: #10B981; /* Green-600 */
+        }
+        body.light-theme .editable-field input {
+            background-color: #FFFFFF;
+            color: #1F2937;
+            border-color: #D1D5DB;
+        }
+        body.light-theme input[type="date"], body.light-theme input[type="number"], body.light-theme input[type="text"] {
+            background-color: #FFFFFF;
+            color: #1F2937;
+            border-color: #D1D5DB;
+        }
+        body.light-theme input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0); /* Reset filter for light theme */
+        }
+        body.light-theme select {
+            background-color: #FFFFFF;
+            color: #1F2937;
+            border-color: #D1D5DB;
+        }
+        body.light-theme .history-item {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            color: #1F2937;
+        }
+        body.light-theme .history-item.buy {
+            border-left-color: #2563EB; /* A stronger blue for light theme border */
+            background-color: #E0F2FE; /* Light blue, similar to DBEAFE but a bit more distinct */
+        }
+        body.light-theme .history-item.sale {
+            border-left-color: #DC2626; /* Darker red for light theme */
+            background-color: #FEE2E2; /* Light red for sale */
+        }
+        body.light-theme .history-item .font-medium {
+            color: #1E40AF;
+        }
+        body.light-theme .history-item .text-sm {
+            color: #4B5563;
+        }
+        body.light-theme .delete-button {
+            color: white; /* White icon on red background */
+        }
+        body.light-theme .delete-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        body.light-theme .form-button {
+            background-color: #DBEAFE; /* Matching total card active (light) */
+            color: #1F2937; /* Dark text for light background */
+        }
+        body.light-theme .form-button:hover {
+            background-color: #B2D8FA; /* Slightly darker hover for light blue */
+        }
+        body.light-theme .sale-button {
+            background-color: #DC2626; /* Red-700 for light theme */
+        }
+        body.light-theme .sale-button:hover {
+            background-color: #B91C1C; /* Darker red on hover */
+        }
+        body.light-theme #loadingOverlay .bg-[#2C2C2E] {
+            background-color: #FFFFFF;
+        }
+        body.light-theme #loadingOverlay h2 {
+            color: #4B5563;
+        }
+        body.light-theme #successNotification {
+            background-color: #10B981; /* green-600 */
+        }
+        body.light-theme #errorNotification {
+            background-color: #EF4444; /* red-600 */
+        }
+        body.light-theme .profit-value {
+            color: #10B981; /* Green for profit */
+        }
+        body.light-theme .loss-value {
+            color: #EF4444; /* Red for loss */
+        }
+        body.light-theme .form-toggle-container {
+            background-color: #E5E7EB;
+        }
+        body.light-theme .form-toggle-button {
+            color: #4B5563;
+        }
+        body.light-theme .form-toggle-button.active-toggle {
+            background-color: #DBEAFE;
+            color: #1F2937;
+        }
+        body.light-theme .form-toggle-button.active-sale-toggle {
+            background-color: #DC2626;
+            color: white;
+        }
+
+
+        /* Custom Modal for Confirmation */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .custom-modal-content {
+            background-color: #2C2C2E;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            color: #E5E7EB;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+        .custom-modal-content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .custom-modal-content p {
+            margin-bottom: 1.5rem;
+        }
+        .custom-modal-actions {
+            display: flex;
+            justify-content: space-around;
+            gap: 1rem;
+        }
+        .custom-modal-actions button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .custom-modal-actions button.confirm {
+            background-color: #EF4444; /* Red */
+            color: white;
+        }
+        .custom-modal-actions button.confirm:hover {
+            background-color: #DC2626; /* Darker Red */
+        }
+        .custom-modal-actions button.cancel {
+            background-color: #4B5563; /* Gray */
+            color: white;
+        }
+        .custom-modal-actions button.cancel:hover {
+            background-color: #374151; /* Darker Gray */
+        }
+
+        body.light-theme .custom-modal-content {
+            background-color: #FFFFFF;
+            color: #1F2937;
+        }
+        body.light-theme .custom-modal-actions button.confirm {
+            background-color: #DC2626;
+        }
+        body.light-theme .custom-modal-actions button.confirm:hover {
+            background-color: #B91C1C;
+        }
+        body.light-theme .custom-modal-actions button.cancel {
+            background-color: #6B7280;
+        }
+        body.light-theme .custom-modal-actions button.cancel:hover {
+            background-color: #4B5563;
+        }
+    </style>
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+
+        // Global variables for Firebase (will be initialized in DOMContentLoaded)
+        window.firebaseApp = null;
+        window.db = null;
+        window.auth = null;
+        window.userId = null;
+        window.userSheetId = null; // To store the user's specific Google Sheet ID
+        let swiperInstance = null; // Declare swiperInstance globally or pass it
+
+
+        // Google Apps Script API URL
+        // IMPORTANT: Replace this placeholder URL with your actual deployed Google Apps Script Web App URL.
+        // Ensure the Apps Script is deployed as a Web App accessible by "Anyone".
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwj2a_1R9ehhAVGikPFOo5ga1Rg0d2hViKPSB0whWtUG_ZD6d3Oanbnamoyr28yAt2H3g/exec';
+        console.log("Using Google Apps Script API_URL:", API_URL); // Added log for API_URL
+
+        // Global variables to store summary data
+        let summaryData = null;
+
+        // Get references to various DOM elements (moved to global scope for broader access)
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const successNotification = document.getElementById('successNotification');
+        const errorNotification = document.getElementById('errorNotification');
+        const totalCardEl = document.getElementById('totalCard');
+        const ratesCardEl = document.getElementById('ratesCard');
+        const buyCardEl = document.getElementById('buyCard');
+        const profitLossCardEl = document.getElementById('profitLossCard'); // New profit/loss card
+        const historyList = document.getElementById('historyList'); // For history tab
+
+        // Custom Modal elements (moved to global scope)
+        const customModalOverlay = document.getElementById('customModalOverlay');
+        const customModalTitle = document.getElementById('customModalTitle');
+        const customModalMessage = document.getElementById('customModalMessage');
+        const customModalConfirmBtn = document.getElementById('customModalConfirmBtn');
+        const customModalCancelBtn = document.getElementById('customModalCancelBtn');
+
+
+        // Function to display notifications
+        function showNotification(element, message = null) {
+            const notificationTextElement = element.querySelector('p');
+            if (notificationTextElement && message) {
+                notificationTextElement.textContent = message;
+            } else if (notificationTextElement) {
+                // Reset to default message if no custom message is provided
+                notificationTextElement.textContent = element.id === 'successNotification' ? 'บันทึกข้อมูลสำเร็จ' : 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+            }
+
+            element.classList.remove('translate-x-full'); // Show notification
+            setTimeout(() => {
+                element.classList.add('translate-x-full'); // Hide notification after 3 seconds
+            }, 3000);
+        }
+
+        // Function to show custom modal
+        function showCustomModal(title, message, onConfirm) {
+            customModalTitle.textContent = title;
+            customModalMessage.textContent = message;
+            customModalOverlay.classList.remove('hidden');
+
+            const confirmHandler = () => {
+                onConfirm();
+                customModalOverlay.classList.add('hidden');
+                customModalConfirmBtn.removeEventListener('click', confirmHandler);
+                customModalCancelBtn.removeEventListener('click', cancelHandler);
+            };
+
+            const cancelHandler = () => {
+                customModalOverlay.classList.add('hidden');
+                customModalConfirmBtn.removeEventListener('click', confirmHandler);
+                customModalCancelBtn.removeEventListener('click', cancelHandler);
+            };
+
+            customModalConfirmBtn.addEventListener('click', confirmHandler);
+            customModalCancelBtn.addEventListener('click', cancelHandler);
+        }
+
+        // Function to toggle card state (visual only)
+        function toggleCardState(cardElement, toggleInput) {
+            if (toggleInput.checked) {
+                cardElement.classList.add('card-on');
+            } else {
+                cardElement.classList.remove('card-on');
+            }
+        }
+
+        // Format currency to 2 decimal places
+        function formatCurrency(value, symbol) {
+            if (value === undefined || value === null || isNaN(value)) return '-';
+            return `${symbol}${parseFloat(value).toLocaleString('th-TH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })}`;
+        }
+
+        // Format exchange rate to 2 decimal places
+        function formatRate(value) {
+            if (value === undefined || value === null || isNaN(value)) return '-';
+            return parseFloat(value).toLocaleString('th-TH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // Format date and time (not used directly in current display, but good to keep)
+        function formatDateTime(date) {
+            return date.toLocaleString('th-TH', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Function to calculate additional buy amount and profit/loss
+        function calculateAdditionalBuy() {
+            // Check if necessary summary data is loaded
+            if (!summaryData || summaryData.totalUSD === undefined || summaryData.targetRate === undefined || summaryData.totalTHB === undefined || summaryData.currentRate === undefined || summaryData.avgRate === undefined) {
+                console.warn("Summary data not fully loaded or incomplete for calculating additional buy and profit/loss.");
+                // Set to 'N/A' or '0.00' if data is incomplete
+                const additionalBuyTHBDisplay = document.getElementById('display-additionalBuyTHB');
+                if (additionalBuyTHBDisplay) {
+                    additionalBuyTHBDisplay.textContent = 'N/A';
+                }
+                const additionalBuyUSDDisplay = document.getElementById('display-additionalBuyUSD');
+                if (additionalBuyUSDDisplay) {
+                    additionalBuyUSDDisplay.textContent = 'N/A';
+                }
+                const displayUnrealizedProfitLossTHB = document.getElementById('display-unrealizedProfitLossTHB');
+                if (displayUnrealizedProfitLossTHB) {
+                    displayUnrealizedProfitLossTHB.textContent = 'N/A';
+                    displayUnrealizedProfitLossTHB.classList.remove('profit-value', 'loss-value');
+                }
+                const displayUnrealizedProfitLossUSD = document.getElementById('display-unrealizedProfitLossUSD');
+                if (displayUnrealizedProfitLossUSD) {
+                    displayUnrealizedProfitLossUSD.textContent = 'N/A';
+                    displayUnrealizedProfitLossUSD.classList.remove('profit-value', 'loss-value');
+                }
+                return;
+            }
+
+
+            const totalTHB = parseFloat(summaryData.totalTHB) || 0;
+            const totalUSD = parseFloat(summaryData.totalUSD) || 0;
+            const targetRate = parseFloat(summaryData.targetRate) || 0;
+            const currentRate = parseFloat(summaryData.currentRate) || 0;
+            const avgRate = parseFloat(summaryData.avgRate) || 0; // Get the calculated avgRate
+
+
+            console.log("Calculating additional buy and profit/loss with:", { totalTHB, totalUSD, targetRate, currentRate, avgRate });
+
+
+            let additionalTHB = 0;
+            let additionalUSD = 0;
+
+
+            // If AvgRate ($) is less than or equal to Target AvgRate ($), set additional buy to 0.00
+            if (avgRate <= targetRate) {
+                console.log("AvgRate is less than or equal to TargetRate. Setting additional buy to 0.");
+                additionalTHB = 0;
+                additionalUSD = 0;
+            } else {
+                // Calculate the additional amount using the provided formula.
+                // Formula: ((TargetRate * totalUSD) - totalTHB) / (1 - (TargetRate / currentRate))
+                const numerator = (targetRate * totalUSD) - totalTHB;
+                const denominator = (1 - (targetRate / currentRate));
+
+                console.log("Intermediate calculation values:", { numerator, denominator }); // Log intermediate values
+
+                if (currentRate === 0) { // Avoid division by zero for targetRate / currentRate
+                    console.warn("Current Rate is zero, cannot calculate additional buy with the given formula.");
+                    additionalTHB = 0; // If currentRate is 0, additionalTHB must be 0
+                    additionalUSD = 0;
+                } else if (denominator === 0) { // Avoid division by zero for the main denominator
+                    console.warn("Denominator (1 - (TargetRate / CurrentRate)) is zero, cannot calculate additional buy. This implies TargetRate equals CurrentRate.");
+                    additionalTHB = 0; // If denominator is 0, additionalTHB must be 0
+                    additionalUSD = 0;
+                } else {
+                    // Assign the result of the formula directly to additionalTHB as per your clarification
+                    additionalTHB = numerator / denominator;
+                    // Calculate additionalUSD by converting from the newly calculated additionalTHB
+                    additionalUSD = additionalTHB / currentRate;
+                }
+            }
+
+            // Update display for Additional Buy (฿)
+            const additionalBuyTHBDisplay = document.getElementById('display-additionalBuyTHB');
+            if (additionalBuyTHBDisplay) {
+                additionalBuyTHBDisplay.textContent = formatCurrency(additionalTHB, '฿');
+            }
+
+
+            // Update display for Additional Buy ($)
+            const additionalBuyUSDDisplay = document.getElementById('display-additionalBuyUSD');
+            if (additionalBuyUSDDisplay) {
+                additionalBuyUSDDisplay.textContent = formatCurrency(additionalUSD, '$');
+            }
+
+
+            // Update stored data in summaryData
+            summaryData.additionalBuyTHB = additionalTHB;
+            summaryData.additionalBuyUSD = additionalUSD;
+
+            // --- Calculate and update Profit/Loss ---
+            // Unrealized Profit/Loss (from current holdings)
+            let unrealizedProfitLossTHB = (totalUSD * currentRate) - totalTHB;
+            let unrealizedProfitLossUSD = unrealizedProfitLossTHB / currentRate;
+
+            const displayUnrealizedProfitLossTHB = document.getElementById('display-unrealizedProfitLossTHB');
+            const displayUnrealizedProfitLossUSD = document.getElementById('display-unrealizedProfitLossUSD');
+
+            if (displayUnrealizedProfitLossTHB) {
+                displayUnrealizedProfitLossTHB.textContent = formatCurrency(unrealizedProfitLossTHB, '฿');
+                displayUnrealizedProfitLossTHB.classList.remove('profit-value', 'loss-value');
+                displayUnrealizedProfitLossTHB.classList.add(unrealizedProfitLossTHB >= 0 ? 'profit-value' : 'loss-value');
+            }
+            if (displayUnrealizedProfitLossUSD) {
+                displayUnrealizedProfitLossUSD.textContent = formatCurrency(unrealizedProfitLossUSD, '$');
+                displayUnrealizedProfitLossUSD.classList.remove('profit-value', 'loss-value');
+                displayUnrealizedProfitLossUSD.classList.add(unrealizedProfitLossUSD >= 0 ? 'profit-value' : 'loss-value');
+            }
+        }
+
+        // Function to display summary data with improved design
+        function displaySummary(summary) {
+            // Calculate AvgRate ($) from Total (฿) / Total ($)
+            let calculatedAvgRate = 0;
+            if (parseFloat(summary.totalUSD) > 0) {
+                calculatedAvgRate = parseFloat(summary.totalTHB) / parseFloat(summary.totalUSD);
+            }
+            summary.avgRate = calculatedAvgRate; // Update avgRate in the summary object
+
+            // Populate Total Card
+            totalCardEl.innerHTML = `
+                <div class="card-header">
+                    <span class="card-icon">💰</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-totalCard">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <h3 class="card-title">ยอดรวม</h3>
+                <p class="card-status">สถานะ: ปกติ</p>
+                <div class="flex-grow"></div> <div class="summary-item">
+                    <div class="summary-label">Total (฿)</div>
+                    <div class="summary-value">${formatCurrency(summary.totalTHB, '฿')}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total ($)</div>
+                    <div class="summary-value">${formatCurrency(summary.totalUSD, '$')}</div>
+                </div>
+            `;
+            const totalCardToggle = document.getElementById('toggle-totalCard');
+            if (totalCardToggle) {
+                totalCardToggle.addEventListener('change', () => toggleCardState(totalCardEl, totalCardToggle));
+            }
+
+
+            // Populate Rates Card
+            ratesCardEl.innerHTML = `
+                <div class="card-header">
+                    <span class="card-icon">📈</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-ratesCard">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <h3 class="card-title">อัตราแลกเปลี่ยน</h3>
+                <p class="card-status">สถานะ: ปกติ</p>
+                <div class="flex-grow"></div> <div class="summary-item">
+                    <div class="summary-label">AvgRate ($)</div>
+                    <div class="summary-value" id="display-avgRate">${formatRate(summary.avgRate)}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Target AvgRate ($)</div>
+                    <div class="editable-field">
+                        <div class="summary-value" id="display-targetRate">${formatRate(summary.targetRate)}</div>
+                        <button class="edit-button ml-2" id="edit-button-targetRate">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                        </button>
+                        <div class="hidden flex items-center" id="edit-form-targetRate">
+                            <input type="number" step="0.01" min="0" id="input-targetRate" value="${parseFloat(summary.targetRate).toFixed(2)}">
+                            <button class="save-button" id="save-button-targetRate">บันทึก</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Rate</div>
+                    <div class="editable-field">
+                        <div class="summary-value" id="display-currentRate">${formatRate(summary.currentRate)}</div>
+                        <button class="edit-button ml-2" id="edit-button-currentRate">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                        </button>
+                        <div class="hidden flex items-center" id="edit-form-currentRate">
+                            <input type="number" step="0.01" min="0" id="input-currentRate" value="${parseFloat(summary.currentRate).toFixed(2)}">
+                            <button class="save-button" id="save-button-currentRate">บันทึก</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            const ratesCardToggle = document.getElementById('toggle-ratesCard');
+            if (ratesCardToggle) {
+                ratesCardToggle.addEventListener('change', () => toggleCardState(ratesCardEl, ratesCardToggle));
+            }
+
+
+            // Populate Buy Card
+            buyCardEl.innerHTML = `
+                <div class="card-header">
+                    <span class="card-icon">💵</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-buyCard">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <h3 class="card-title">ซื้อเพิ่ม</h3>
+                <p class="card-status">สถานะ: ปกติ</p>
+                <div class="flex-grow"></div> <div class="summary-item">
+                    <div class="summary-label">ซื้อเพิ่ม (฿)</div>
+                    <div id="display-additionalBuyTHB" class="highlight-value">0.00 ฿</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">ซื้อเพิ่ม ($)</div>
+                    <div id="display-additionalBuyUSD" class="highlight-value">0.00 USD</div>
+                </div>
+            `;
+            const buyCardToggle = document.getElementById('toggle-buyCard');
+            if (buyCardToggle) {
+                buyCardToggle.addEventListener('change', () => toggleCardState(buyCardEl, buyCardToggle));
+            }
+
+            // Populate Profit/Loss Card (initial state)
+            const totalTHB = parseFloat(summary.totalTHB) || 0;
+            const totalUSD = parseFloat(summary.totalUSD) || 0;
+            const currentRate = parseFloat(summary.currentRate) || 0;
+            const realizedProfitLoss = parseFloat(summary.realizedProfitLoss) || 0; // Realized P/L from sales
+
+            // Unrealized Profit/Loss (from current holdings)
+            let unrealizedProfitLossTHB = (totalUSD * currentRate) - totalTHB;
+            let unrealizedProfitLossUSD = unrealizedProfitLossTHB / currentRate;
+
+            const unrealizedProfitLossClassTHB = unrealizedProfitLossTHB >= 0 ? 'profit-value' : 'loss-value';
+            const unrealizedProfitLossClassUSD = unrealizedProfitLossUSD >= 0 ? 'profit-value' : 'loss-value';
+
+            const realizedProfitLossClass = realizedProfitLoss >= 0 ? 'profit-value' : 'loss-value';
+
+
+            profitLossCardEl.innerHTML = `
+                <div class="card-header">
+                    <span class="card-icon">📈</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-profitLossCard">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <h3 class="card-title">กำไร/ขาดทุน</h3>
+                <p class="card-status">สถานะ: ปกติ</p>
+                <div class="flex-grow"></div>
+                <div class="summary-item">
+                    <div class="summary-label">กำไร/ขาดทุนที่รับรู้ (฿)</div>
+                    <div id="display-realizedProfitLossTHB" class="${realizedProfitLossClass}">${formatCurrency(realizedProfitLoss, '฿')}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">กำไร/ขาดทุนที่ยังไม่รับรู้ (฿)</div>
+                    <div id="display-unrealizedProfitLossTHB" class="${unrealizedProfitLossClassTHB}">${formatCurrency(unrealizedProfitLossTHB, '฿')}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">กำไร/ขาดทุนที่ยังไม่รับรู้ ($)</div>
+                    <div id="display-unrealizedProfitLossUSD" class="${unrealizedProfitLossClassUSD}">${formatCurrency(unrealizedProfitLossUSD, '$')}</div>
+                </div>
+            `;
+            const profitLossCardToggle = document.getElementById('toggle-profitLossCard');
+            if (profitLossCardToggle) {
+                profitLossCardToggle.addEventListener('change', () => toggleCardState(profitLossCardEl, profitLossCardToggle));
+            }
+
+
+            // Add event listeners for editable fields
+            addEditableFieldListeners();
+            // Recalculate "Additional Buy" and Profit/Loss immediately
+            calculateAdditionalBuy();
+        }
+
+        // Add event listeners to all editable fields
+        function addEditableFieldListeners() {
+            // Target Rate
+            const targetRateEditButton = document.getElementById('edit-button-targetRate');
+            const targetRateDisplay = document.getElementById('display-targetRate');
+            const targetRateForm = document.getElementById('edit-form-targetRate');
+            const targetRateInput = document.getElementById('input-targetRate');
+            const targetRateSaveButton = document.getElementById('save-button-targetRate');
+
+
+            if (targetRateEditButton) {
+                targetRateEditButton.addEventListener('click', function() {
+                    targetRateDisplay.classList.add('hidden');
+                    targetRateEditButton.classList.add('hidden');
+                    targetRateForm.classList.remove('hidden');
+                    targetRateInput.focus();
+                });
+
+
+                targetRateInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        targetRateSaveButton.click();
+                    }
+                });
+
+                targetRateSaveButton.addEventListener('click', function() {
+                    saveEditableField('targetRate', targetRateInput, targetRateDisplay, targetRateEditButton, targetRateForm);
+                });
+            }
+
+
+            // Current Rate
+            const currentRateEditButton = document.getElementById('edit-button-currentRate');
+            const currentRateDisplay = document.getElementById('display-currentRate');
+            const currentRateForm = document.getElementById('edit-form-currentRate');
+            const currentRateInput = document.getElementById('input-currentRate');
+            const currentRateSaveButton = document.getElementById('save-button-currentRate');
+
+
+            if (currentRateEditButton) {
+                currentRateEditButton.addEventListener('click', function() {
+                    currentRateDisplay.classList.add('hidden');
+                    currentRateEditButton.classList.add('hidden');
+                    currentRateForm.classList.remove('hidden');
+                    currentRateInput.focus();
+                });
+
+
+                currentRateInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        currentRateSaveButton.click();
+                    }
+                });
+
+                currentRateSaveButton.addEventListener('click', function() {
+                    saveEditableField('currentRate', currentRateInput, currentRateDisplay, currentRateEditButton, currentRateForm);
+                });
+            }
+        }
+
+
+        // Function to save an editable field
+        function saveEditableField(key, inputElement, displayElement, editButton, formElement) { // Added editButton parameter
+            const newValue = parseFloat(inputElement.value);
+            if (!isNaN(newValue) && newValue > 0) {
+                // Update the value in summaryData before sending to API
+                if (summaryData) {
+                    summaryData[key] = newValue;
+                }
+
+                // Send update to Google Sheets via API
+                // Note: The 'key' (e.g., 'targetRate', 'currentRate') is sent to the Apps Script.
+                // Your Apps Script must be configured to map these keys to the correct cells (B2 for targetRate, B3 for currentRate).
+                updateSummaryField(key, newValue)
+                    .then(() => {
+                        // Update display after successful save
+                        displayElement.textContent = formatRate(newValue);
+
+
+                        // Hide edit form
+                        displayElement.classList.remove('hidden');
+                        editButton.classList.remove('hidden');
+                        formElement.classList.add('hidden');
+
+
+                        // Recalculate additionalBuyTHB and Profit/Loss immediately
+                        calculateAdditionalBuy();
+                    })
+                    .catch(error => {
+                        console.error('Error saving field:', error);
+                        showNotification(errorNotification, 'ไม่สามารถบันทึกข้อมูลได้: ' + error.message); // Added notification
+                        // Revert UI to display mode
+                        displayElement.classList.remove('hidden');
+                        editButton.classList.remove('hidden');
+                        formElement.classList.add('hidden');
+                    });
+            } else {
+                // Invalid input, show error
+                inputElement.classList.add('border-red-500');
+                setTimeout(() => {
+                    inputElement.classList.remove('border-red-500');
+                }, 2000);
+                showNotification(errorNotification, 'ค่าที่ป้อนไม่ถูกต้อง'); // Added notification
+                // Revert UI to display mode (if it was in edit mode)
+                displayElement.classList.remove('hidden');
+                editButton.classList.remove('hidden');
+                formElement.classList.add('hidden');
+            }
+        }
+
+
+        // Function to update a summary field in Google Sheets
+        async function updateSummaryField(fieldName, value) {
+            // Show loading indicator
+            loadingOverlay.classList.remove('hidden');
+
+
+            // Check if userSheetId is set
+            if (!window.userSheetId) {
+                showNotification(errorNotification, 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
+                loadingOverlay.classList.add('hidden');
+                return false;
+            }
+
+
+            const formData = new FormData();
+            formData.append('action', 'updateSummary');
+            formData.append('field', fieldName); // fieldName will be 'targetRate' or 'currentRate'
+            formData.append('value', value);
+            formData.append('sheetId', window.userSheetId); // Pass user's sheet ID
+
+
+            try {
+                console.log("Updating summary field via API_URL:", API_URL); // Added log for fetch
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+
+                if (!response.ok) {
+                    console.error('Network response was not ok for update summary:', response.status, response.statusText, response.url);
+                    throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+
+
+                loadingOverlay.classList.add('hidden');
+
+
+                if (data.success) {
+                    showNotification(successNotification); // Show success notification
+                    return true; // Indicate success
+                } else {
+                    showNotification(errorNotification, data.message || 'Failed to update summary field'); // Show error notification
+                    throw new Error(data.message || 'Failed to update summary field'); // Throw error
+                }
+            } catch (error) {
+                console.error('Error updating summary field:', error);
+                loadingOverlay.classList.add('hidden');
+                showNotification(errorNotification, 'ไม่สามารถอัปเดตข้อมูลสรุปได้: โปรดตรวจสอบ URL ของ Google Apps Script และการตั้งค่าการเข้าถึง'); // Show more specific error notification
+                throw error; // Re-throw error
+            }
+        }
+
+        // Variables for swipe logic (moved to global scope)
+        let startX = 0;
+        let currentX = 0;
+        let isSwiping = false;
+        let activeSwipeItem = null; // Stores the currently swiped item's swipe-content element
+
+        // Function to close any currently open swipe item (moved to global scope)
+        function closeActiveSwipeItem() {
+            if (activeSwipeItem) {
+                activeSwipeItem.style.transform = 'translateX(0)';
+                activeSwipeItem.classList.remove('swiped');
+                const deleteReveal = activeSwipeItem.nextElementSibling; // Assuming delete-reveal is the next sibling
+                if (deleteReveal && deleteReveal.classList.contains('delete-reveal')) {
+                    deleteReveal.classList.remove('revealed');
+                }
+                activeSwipeItem = null;
+            }
+        }
+
+        // Function to delete a record from Google Sheet (moved to global scope)
+        async function deleteRecord(originalRowIndex, sheetName) { // Added sheetName parameter
+            if (!window.userSheetId) {
+                showNotification(errorNotification, 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
+                return;
+            }
+
+            loadingOverlay.classList.remove('hidden');
+
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('rowIndex', originalRowIndex); // Send original row index
+            formData.append('sheetId', window.userSheetId);
+            formData.append('sheetName', sheetName); // Pass the sheet name for deletion
+
+            try {
+                console.log(`Attempting to delete row ${originalRowIndex} from sheet ${sheetName} via API_URL:`, API_URL);
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    console.error('Network response was not ok for delete:', response.status, response.statusText, response.url);
+                    throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+
+                loadingOverlay.classList.add('hidden');
+
+                if (data.success) {
+                    showNotification(successNotification, 'ลบข้อมูลสำเร็จ');
+                    // Refresh history and summary after successful deletion
+                    fetchHistory();
+                    fetchSummary();
+                } else {
+                    showNotification(errorNotification, data.message || 'เกิดข้อผิดพลาดในการลบข้อมูล');
+                }
+            } catch (error) {
+                console.error('Error deleting data:', error);
+                loadingOverlay.classList.add('hidden');
+                showNotification(errorNotification, 'ไม่สามารถลบข้อมูลได้: โปรดตรวจสอบ URL ของ Google Apps Script และการตั้งค่าการเข้าถึง');
+            }
+        }
+
+        // Function to fetch history data from Google Sheets (moved to global scope)
+        function fetchHistory() {
+            historyList.innerHTML = `
+                <div class="flex justify-center py-8">
+                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10"></div>
+                </div>
+            `;
+
+
+            // Check if userSheetId is set
+            if (!window.userSheetId) {
+                historyList.innerHTML = '<p class="text-red-500 text-center py-4">กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน</p>';
+                return;
+            }
+
+
+            console.log("Fetching history data from:", API_URL); // Added log for fetch
+
+
+            const formData = new FormData();
+            formData.append('action', 'getRecords');
+            formData.append('sheetId', window.userSheetId); // Pass user's sheet ID
+
+
+            fetch(API_URL, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    console.error('Network response was not ok for history:', response.status, response.statusText, response.url);
+                    throw new Error(`Network response was not ok for history: ${response.status} ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("History API Response:", data);
+
+
+                if (data.success && data.records && Array.isArray(data.records) && data.records.length > 0) {
+                    displayHistory(data.records); // Display history data
+                } else {
+                    historyList.innerHTML = '<p class="text-gray-500 text-center py-4">ยังไม่มีข้อมูล</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching history data:', error);
+                historyList.innerHTML = `<p class="text-red-500 text-center py-4">ไม่สามารถโหลดข้อมูลได้: โปรดตรวจสอบ URL ของ Google Apps Script และการตั้งค่าการเข้าถึง</p>`;
+            });
+        }
+
+        // Function to display history data with improved design (moved to global scope)
+        function displayHistory(records) {
+            historyList.innerHTML = ''; // Clear previous history content
+            closeActiveSwipeItem(); // Close any open swipe item when refreshing history
+
+
+            if (!records || records.length === 0) {
+                historyList.innerHTML = '<p class="text-gray-500 text-center py-4">ยังไม่มีข้อมูล</p>';
+                return;
+            }
+
+
+            // Sort records by timestamp (assuming it's the last element in data array)
+            const sortedRecords = [...records].sort((a, b) => {
+                const dateA = new Date(a.data[a.data.length - 1]); // Timestamp is last element
+                const dateB = new Date(b.data[b.data.length - 1]);
+                return dateB - dateA; // Newest first
+            });
+
+
+            sortedRecords.forEach((recordObj) => {
+                const record = recordObj.data;
+                const originalRowIndex = recordObj.rowIndex; // Get the original row index
+                const type = recordObj.type; // 'buy' or 'sale'
+                const sheetName = recordObj.sheetName; // 'Sheet1' or 'Sales'
+
+                let displayDate, amountLabel, amountValue, rateLabel, rateValue, primaryAmount, secondaryAmount;
+
+                // Extract data based on type
+                if (type === 'buy') {
+                    // [Date, THB Amount, Exchange Rate, USD Amount, Timestamp]
+                    displayDate = record[0];
+                    primaryAmount = parseFloat(record[3]); // USD Amount
+                    secondaryAmount = parseFloat(record[1]); // THB Amount
+                    rateValue = parseFloat(record[2]); // Exchange Rate
+
+                    amountLabel = 'จำนวนเงิน:';
+                    amountValue = formatCurrency(secondaryAmount, '฿');
+                    rateLabel = 'อัตรา:';
+
+                } else if (type === 'sale') {
+                    // [Date, USD Amount, Exchange Rate, THB Received, Timestamp]
+                    displayDate = record[0];
+                    primaryAmount = parseFloat(record[1]); // USD Amount Sold
+                    secondaryAmount = parseFloat(record[3]); // THB Received
+                    rateValue = parseFloat(record[2]); // Exchange Rate
+
+                    amountLabel = 'ได้รับเงิน:';
+                    amountValue = formatCurrency(secondaryAmount, '฿');
+                    rateLabel = 'อัตรา:';
+                } else {
+                    // Fallback for unknown types
+                    return;
+                }
+
+                // Format date for display
+                try {
+                    if (typeof displayDate === 'string') {
+                        const dateObj = new Date(displayDate);
+                        if (!isNaN(dateObj.getTime())) {
+                            displayDate = dateObj.toLocaleDateString('th-TH', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error formatting date:", e);
+                }
+
+
+                // Display only if numerical values are valid
+                if (!isNaN(primaryAmount) && !isNaN(rateValue)) {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = `history-item fade-in ${type}`; // Add 'buy' or 'sale' class
+                    historyItem.dataset.originalRowIndex = originalRowIndex; // Store original row index
+                    historyItem.dataset.sheetName = sheetName; // Store sheet name
+
+                    historyItem.innerHTML = `
+                        <div class="swipe-container">
+                            <div class="swipe-content">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium">${displayDate} (${type === 'buy' ? 'ซื้อ' : 'ขาย'})</span>
+                                    <span class="font-semibold">${primaryAmount.toFixed(2)} USD</span>
+                                </div>
+                                <div class="flex justify-between text-sm mt-2">
+                                    <span>${amountLabel} ${amountValue}</span>
+                                    <span>${rateLabel} ${rateValue.toFixed(2)}</span>
+                                </div>
+                            </div>
+                            <div class="delete-reveal">
+                                <button class="delete-button" data-row-index="${originalRowIndex}" data-sheet-name="${sheetName}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+
+
+                    historyList.appendChild(historyItem);
+                }
+            });
+
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent swipe logic from interfering
+                    const originalRowIndex = this.dataset.rowIndex; // Get the original row index
+                    const sheetName = this.dataset.sheetName; // Get the sheet name
+                    showCustomModal('ยืนยันการลบ', 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?', () => deleteRecord(originalRowIndex, sheetName));
+                });
+            });
+
+            // Add swipe event listeners to each history item
+            document.querySelectorAll('.history-item').forEach(item => {
+                const swipeContent = item.querySelector('.swipe-content');
+                const deleteReveal = item.querySelector('.delete-reveal');
+                const deleteButtonWidth = 80; // Must match CSS width of .delete-reveal
+
+                let startX = 0;
+                let currentX = 0;
+                let isSwiping = false;
+                let initialTranslateX = 0; // To handle items that might already be slightly open
+
+                const handleStart = (e) => {
+                    closeActiveSwipeItem(); // Close any other open item
+                    isSwiping = true;
+                    startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                    swipeContent.classList.add('dragging');
+                    // Get current transform value if any (e.g., if it was partially swiped)
+                    const transformMatch = swipeContent.style.transform.match(/translateX\(([^)]+)px\)/);
+                    initialTranslateX = transformMatch ? parseFloat(transformMatch[1]) : 0;
+
+                    // Disable Swiper's touch move when a history item swipe starts
+                    if (swiperInstance) { // Use swiperInstance
+                        swiperInstance.allowTouchMove = false;
+                    }
+                };
+
+                const handleMove = (e) => {
+                    if (!isSwiping) return;
+
+                    currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                    let deltaX = currentX - startX;
+
+                    // Add initialTranslateX to deltaX to continue from current position
+                    let newTranslateX = initialTranslateX + deltaX;
+
+                    // Limit swipe to the left (negative values) and not beyond delete button width
+                    newTranslateX = Math.max(-deleteButtonWidth, Math.min(0, newTranslateX));
+
+                    swipeContent.style.transform = `translateX(${newTranslateX}px)`;
+                    deleteReveal.style.transform = `translateX(${Math.max(0, deleteButtonWidth + newTranslateX)}px)`; // Adjust reveal position
+
+                    // Prevent vertical scrolling if horizontal swipe is dominant
+                    if (Math.abs(deltaX) > 5) { // Threshold for horizontal movement
+                        e.preventDefault();
+                    }
+                };
+
+                const handleEnd = () => {
+                    if (!isSwiping) return;
+                    isSwiping = false;
+                    swipeContent.classList.remove('dragging');
+
+                    const currentSwipePosition = parseFloat(swipeContent.style.transform.replace('translateX(', '').replace('px)', '')) || 0;
+
+                    // If swiped more than half the delete button width, snap open
+                    if (currentSwipePosition < -deleteButtonWidth / 2) {
+                        swipeContent.style.transform = `translateX(-${deleteButtonWidth}px)`;
+                        deleteReveal.style.transform = `translateX(0)`;
+                        swipeContent.classList.add('swiped');
+                        deleteReveal.classList.add('revealed');
+                        activeSwipeItem = swipeContent; // Set this as the active open item
+                    } else {
+                        // Snap back to original position
+                        swipeContent.style.transform = 'translateX(0)';
+                        deleteReveal.style.transform = `translateX(100%)`;
+                        swipeContent.classList.remove('swiped');
+                        deleteReveal.classList.remove('revealed');
+                    }
+                    // Re-enable Swiper's touch move when the history item swipe ends
+                    if (swiperInstance) { // Use swiperInstance
+                        swiperInstance.allowTouchMove = true;
+                    }
+                };
+
+                // Touch events
+                swipeContent.addEventListener('touchstart', handleStart, { passive: false });
+                swipeContent.addEventListener('touchmove', handleMove, { passive: false });
+                swipeContent.addEventListener('touchend', handleEnd);
+
+                // Mouse events
+                swipeContent.addEventListener('mousedown', handleStart);
+                swipeContent.addEventListener('mousemove', handleMove);
+                swipeContent.addEventListener('mouseup', handleEnd);
+                swipeContent.addEventListener('mouseleave', () => { // End swipe if mouse leaves
+                    if (isSwiping) handleEnd();
+                });
+            });
+
+
+            // If no valid records are displayed
+            if (historyList.children.length === 0) {
+                historyList.innerHTML = '<p class="text-gray-500 text-center py-4">ยังไม่มีข้อมูล</p>';
+            }
+        }
+
+
+        // Function to fetch summary data from Google Apps Script
+        function fetchSummary() {
+            // Display loaders in each summary card
+            totalCardEl.innerHTML = `
+                <div class="flex justify-center py-8">
+                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10"></div>
+                </div>
+            `;
+            ratesCardEl.innerHTML = `
+                <div class="flex justify-center py-8">
+                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10"></div>
+                </div>
+            `;
+            buyCardEl.innerHTML = `
+                <div class="flex justify-center py-8">
+                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10"></div>
+                </div>
+            `;
+            profitLossCardEl.innerHTML = `
+                <div class="flex justify-center py-8">
+                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10"></div>
+                </div>
+            `;
+
+
+            // Check if userSheetId is available before fetching data
+            if (!window.userSheetId) {
+                const noSheetIdMessage = '<p class="text-red-500 text-center py-4">กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่า</p>';
+                totalCardEl.innerHTML = noSheetIdMessage;
+                ratesCardEl.innerHTML = noSheetIdMessage;
+                buyCardEl.innerHTML = noSheetIdMessage;
+                profitLossCardEl.innerHTML = noSheetIdMessage;
+                return;
+            }
+
+
+            console.log("Fetching summary data from:", API_URL); // Added log for fetch
+
+            const formData = new FormData();
+            formData.append('action', 'getSummary');
+            formData.append('sheetId', window.userSheetId); // Pass user's sheet ID
+
+
+            fetch(API_URL, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Log more details about the network response if it's not OK
+                    console.error('Network response was not ok for summary:', response.status, response.statusText, response.url);
+                    throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Summary API Response:", data);
+
+
+                if (data.success && data.summary) {
+                    summaryData = data.summary; // Store summary data globally
+                    displaySummary(data.summary); // Display the summary
+
+                    // Set default card states after summary is displayed
+                    const totalCardToggle = document.getElementById('toggle-totalCard');
+                    const ratesCardToggle = document.getElementById('toggle-ratesCard');
+                    const buyCardToggle = document.getElementById('toggle-buyCard'); // Get buy card toggle
+                    const profitLossCardToggle = document.getElementById('toggle-profitLossCard');
+
+                    if (totalCardToggle) {
+                        totalCardToggle.checked = true; // Set to checked
+                        toggleCardState(totalCardEl, totalCardToggle);
+                    }
+                    if (ratesCardToggle) {
+                        ratesCardToggle.checked = true; // Set to checked
+                        toggleCardState(ratesCardEl, ratesCardToggle);
+                    }
+                    if (buyCardToggle) {
+                        buyCardToggle.checked = true; // Set to checked
+                        toggleCardState(buyCardEl, buyCardToggle);
+                    }
+                    if (profitLossCardToggle) {
+                        profitLossCardToggle.checked = true; // Set to checked
+                        toggleCardState(profitLossCardEl, profitLossCardToggle);
+                    }
+
+                } else {
+                    const noDataMessage = '<p class="text-gray-500 text-center py-4">ไม่พบข้อมูลสรุป</p>';
+                    totalCardEl.innerHTML = noDataMessage;
+                    ratesCardEl.innerHTML = noDataMessage;
+                    buyCardEl.innerHTML = noDataMessage;
+                    profitLossCardEl.innerHTML = noDataMessage;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching summary data:', error);
+                const errorMessage = `<p class="text-red-500 text-center py-4">ไม่สามารถโหลดข้อมูลสรุปได้: โปรดตรวจสอบ URL ของ Google Apps Script และการตั้งค่าการเข้าถึง</p>`;
+                totalCardEl.innerHTML = errorMessage;
+                ratesCardEl.innerHTML = errorMessage;
+                buyCardEl.innerHTML = errorMessage;
+                profitLossCardEl.innerHTML = errorMessage;
+            });
+        }
+
+
+        // This function will be called once the DOM is fully loaded.
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Retrieve global variables provided by the Canvas environment
+            // __app_id, __firebase_config, __initial_auth_token are injected by the environment.
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+
+            // Initialize Firebase if config is available and not already initialized
+            if (Object.keys(firebaseConfig).length > 0 && !window.firebaseApp) {
+                window.firebaseApp = initializeApp(firebaseConfig);
+                window.db = getFirestore(window.firebaseApp);
+                window.auth = getAuth(window.firebaseApp);
+
+
+                // Authenticate user using custom token or anonymously
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(window.auth, initialAuthToken);
+                        console.log("Firebase authentication successful with custom token.");
+                    } else {
+                        await signInAnonymously(window.auth);
+                        console.log("Firebase anonymous authentication successful.");
+                    }
+                } catch (error) {
+                    console.error("Firebase authentication failed:", error);
+                    // Handle authentication failure, e.g., show an an error message
+                }
+
+
+                // Listen for auth state changes to get userId and fetch user's sheet ID
+                onAuthStateChanged(window.auth, async (user) => {
+                    if (user) {
+                        window.userId = user.uid;
+                        console.log("User ID:", window.userId);
+                        // Update the displayed user ID in the settings tab
+                        const displayUserIdElement = document.getElementById('displayUserId');
+                        if (displayUserIdElement) {
+                            displayUserIdElement.textContent = window.userId;
+                        }
+                        await fetchUserSheetId(); // Fetch user's sheet ID
+
+                        initializeAppComponent(); // Initialize app components (including Swiper)
+
+                        // After fetching sheet ID, decide what to do
+                        if (window.userSheetId) {
+                            fetchSummary(); // Load summary data immediately if sheet ID exists
+                        } else {
+                            // Show notification and navigate to settings if no sheet ID
+                            showNotification(document.getElementById('errorNotification'), 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
+                            if (swiperInstance) {
+                                swiperInstance.slideTo(3); // Navigate to settings tab (assuming index 3)
+                            }
+                        }
+                    } else {
+                        window.userId = null;
+                        window.userSheetId = null;
+                        console.log("No user signed in.");
+                        const displayUserIdElement = document.getElementById('displayUserId');
+                        if (displayUserIdElement) {
+                            displayUserIdElement.textContent = 'N/A';
+                        }
+                        initializeAppComponent(); // Initialize app components even if no user
+                        showNotification(document.getElementById('errorNotification'), 'ไม่สามารถโหลดข้อมูลได้: โปรดเข้าสู่ระบบหรือตั้งค่า Google Sheet ID');
+                        if (swiperInstance) {
+                            swiperInstance.slideTo(3); // Navigate to settings tab
+                        }
+                    }
+                });
+            } else {
+                console.warn("Firebase config not found or already initialized. Proceeding without Firebase.");
+                // If Firebase cannot be initialized, still try to run the app components
+                initializeAppComponent();
+            }
+        });
+
+
+        // Function to fetch the user's Google Sheet ID from Firestore
+        async function fetchUserSheetId() {
+            if (!window.db || !window.userId) {
+                console.error("Firestore or User ID not available to fetch sheet ID.");
+                window.userSheetId = null;
+                const sheetIdInput = document.getElementById('sheetIdInput');
+                if (sheetIdInput) sheetIdInput.value = '';
+                return;
+            }
+            try {
+                // Construct the document reference for the user's sheet ID
+                const userSheetDocRef = doc(window.db, `artifacts/${__app_id}/users/${window.userId}/sheets/userSheet`);
+                const docSnap = await getDoc(userSheetDocRef); // Get the document snapshot
+                if (docSnap.exists()) {
+                    window.userSheetId = docSnap.data().sheetId; // Extract the sheetId
+                    const sheetIdInput = document.getElementById('sheetIdInput');
+                    if (sheetIdInput) sheetIdInput.value = window.userSheetId; // Update the input field
+                    console.log("User's Google Sheet ID fetched from Firestore:", window.userSheetId);
+                } else {
+                    window.userSheetId = null; // No sheet ID found
+                    const sheetIdInput = document.getElementById('sheetIdInput');
+                    if (sheetIdInput) sheetIdInput.value = ''; // Clear the input field
+                    console.log("No Google Sheet ID found for this user in Firestore.");
+                }
+            } catch (error) {
+                console.error("Error fetching user sheet ID from Firestore:", error);
+                window.userSheetId = null;
+                const sheetIdInput = document.getElementById('sheetIdInput');
+                if (sheetIdInput) sheetIdInput.value = '';
+            }
+        }
+
+
+        // Function to save the user's Google Sheet ID to Firestore
+        async function saveUserSheetId(sheetId) {
+            if (!window.db || !window.userId) {
+                console.error("Firestore or User ID not available to save sheet ID.");
+                return false;
+            }
+            try {
+                // Construct the document reference for the user's sheet ID
+                const userSheetDocRef = doc(window.db, `artifacts/${__app_id}/users/${window.userId}/sheets/userSheet`);
+                await setDoc(userSheetDocRef, { sheetId: sheetId }); // Set the document with the new sheet ID
+                window.userSheetId = sheetId; // Update global variable
+                console.log("User's Google Sheet ID saved to Firestore:", sheetId);
+                return true;
+            } catch (error) {
+                console.error("Error saving user sheet ID to Firestore:", error);
+                return false;
+            }
+        }
+
+
+        // Main application initialization function.
+        // This function is called after Firebase authentication and sheet ID fetching are attempted.
+        function initializeAppComponent() {
+            // Get references to various DOM elements
+            const buyForm = document.getElementById('usdBuyForm'); // Changed from usdForm
+            const thbAmountInput = document.getElementById('thbAmount');
+            const exchangeRateInput = document.getElementById('exchangeRate');
+            const usdResultElement = document.getElementById('usdResult');
+            const refreshButton = document.getElementById('refreshButton');
+            const refreshSummaryButton = document.getElementById('refreshSummaryButton');
+            const navItems = document.querySelectorAll('.nav-item');
+            const indicators = document.querySelectorAll('.indicator');
+
+            // Sales form elements
+            const sellForm = document.getElementById('usdSellForm');
+            const usdSellAmountInput = document.getElementById('usdSellAmount');
+            const exchangeRateSellInput = document.getElementById('exchangeRateSell');
+            const thbReceiveResultElement = document.getElementById('thbReceiveResult');
+
+            // Form toggle elements
+            const buyFormToggleBtn = document.getElementById('buyFormToggleBtn');
+            const sellFormToggleBtn = document.getElementById('sellFormToggleBtn');
+            const buyFormContainer = document.getElementById('buyFormContainer');
+            const sellFormContainer = document.getElementById('sellFormContainer');
+
+
+            // Settings tab elements
+            const sheetIdInput = document.getElementById('sheetIdInput');
+            const saveSheetIdButton = document.getElementById('saveSheetIdButton');
+            const displayUserId = document.getElementById('displayUserId');
+
+            // Theme toggle elements
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            const tradingViewWidgetContainer = document.querySelector('.tradingview-widget-container__widget');
+
+
+            // Initialize Swiper for tab navigation
+            swiperInstance = new Swiper(".mySwiper", { // Assign to global swiperInstance
+                initialSlide: 0, // Start on the summary tab
+                effect: "slide", // Slide transition effect
+                speed: 300, // Transition speed
+                allowTouchMove: true, // Allow swiping by default
+                resistance: true, // Enable resistance effect
+                resistanceRatio: 0.85, // Resistance ratio
+                on: {
+                    // Update bottom navigation when slide changes
+                    slideChange: function() {
+                        updateNavigation(this.activeIndex);
+                    },
+                    // Load data specific to the tab after slide transition ends
+                    slideChangeTransitionEnd: function() {
+                        if (this.activeIndex === 0) { // Summary tab
+                            // Only fetch summary if sheetId is present
+                            if (window.userSheetId) {
+                                fetchSummary();
+                            } else {
+                                // If no sheet ID, clear summary cards and prompt user
+                                const noSheetIdMessage = '<p class="text-red-500 text-center py-4">กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่า</p>';
+                                totalCardEl.innerHTML = noSheetIdMessage;
+                                ratesCardEl.innerHTML = noSheetIdMessage;
+                                buyCardEl.innerHTML = noSheetIdMessage;
+                                profitLossCardEl.innerHTML = noSheetIdMessage;
+                            }
+                        } else if (this.activeIndex === 1) { // Record tab (Buy/Sell)
+                            // Set the current date when the Record tab becomes active
+                            const today = new Date();
+                            const formattedDate = today.toISOString().split('T')[0];
+                            const dateInput = document.getElementById('date');
+                            const dateSellInput = document.getElementById('dateSell');
+                            if (dateInput) {
+                                dateInput.value = formattedDate;
+                                calculateUSD();
+                            }
+                            if (dateSellInput) {
+                                dateSellInput.value = formattedDate;
+                                calculateTHBForSale();
+                            }
+                        } else if (this.activeIndex === 2) { // History tab
+                            fetchHistory();
+                        }
+                    }
+                }
+            });
+
+
+            // Function to update the active state of bottom navigation items and indicators
+            function updateNavigation(index) {
+                navItems.forEach((item, i) => {
+                    if (i === index) {
+                        item.classList.add('active'); // Add active class
+                    } else {
+                        item.classList.remove('active'); // Remove active class
+                    }
+                });
+
+
+                indicators.forEach((indicator, i) => {
+                    if (i === index) {
+                        indicator.classList.add('active'); // Add active class
+                    } else {
+                        indicator.classList.remove('active'); // Remove active class
+                    }
+                });
+            }
+
+
+            // Add click listeners to bottom navigation items to change slides
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index')); // Get index from data-index attribute
+                    if (swiperInstance) { // Use swiperInstance
+                        swiperInstance.slideTo(index); // Navigate to the specified slide
+                    }
+                });
+            });
+
+
+            // Function to calculate USD amount based on THB amount and exchange rate (for Purchase)
+            function calculateUSD() {
+                const thbAmount = parseFloat(thbAmountInput.value) || 0; // Get THB amount
+                const exchangeRate = parseFloat(exchangeRateInput.value) || 0; // Get exchange rate
+
+
+                if (thbAmount > 0 && exchangeRate > 0) {
+                    const usdAmount = thbAmount / exchangeRate; // Calculate USD
+                    usdResultElement.textContent = usdAmount.toFixed(2) + ' USD'; // Display result
+                } else {
+                    usdResultElement.textContent = '0.00 USD'; // Display 0.00 USD if inputs are invalid
+                }
+            }
+
+            // Function to calculate THB amount based on USD amount and exchange rate (for Sale)
+            function calculateTHBForSale() {
+                const usdAmount = parseFloat(usdSellAmountInput.value) || 0;
+                const exchangeRate = parseFloat(exchangeRateSellInput.value) || 0;
+
+                if (usdAmount > 0 && exchangeRate > 0) {
+                    const thbReceived = usdAmount * exchangeRate;
+                    thbReceiveResultElement.textContent = thbReceived.toFixed(2) + ' ฿';
+                } else {
+                    thbReceiveResultElement.textContent = '0.00 ฿';
+                }
+            }
+
+
+            // Add input event listeners to recalculate USD on change
+            thbAmountInput.addEventListener('input', calculateUSD);
+            exchangeRateInput.addEventListener('input', calculateUSD);
+
+            // Add input event listeners to recalculate THB on change for sales
+            usdSellAmountInput.addEventListener('input', calculateTHBForSale);
+            exchangeRateSellInput.addEventListener('input', calculateTHBForSale);
+
+
+            // Handle form submission for saving purchase data
+            buyForm.addEventListener('submit', function(e) { // Changed from form
+                e.preventDefault(); // Prevent default form submission
+
+
+                const date = document.getElementById('date').value;
+                const thbAmount = parseFloat(thbAmountInput.value);
+                const exchangeRate = parseFloat(exchangeRateInput.value);
+
+
+                // Validate input data
+                if (!date || isNaN(thbAmount) || isNaN(exchangeRate)) {
+                    showNotification(errorNotification, 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง'); // Show error notification
+                    return;
+                }
+
+
+                // Check if userSheetId is set
+                if (!window.userSheetId) {
+                    showNotification(errorNotification, 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
+                    return;
+                }
+
+
+                // Show loading overlay
+                loadingOverlay.classList.remove('hidden');
+
+
+                // Prepare data for API request
+                const formData = new FormData();
+                formData.append('action', 'save');
+                formData.append('date', date);
+                formData.append('thbAmount', thbAmount);
+                formData.append('exchangeRate', exchangeRate);
+                formData.append('sheetId', window.userSheetId); // Add user's sheet ID
+
+
+                console.log("Attempting to save data to API_URL:", API_URL);
+
+
+                // Send data to Google Apps Script
+                fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        // Log more details about the network response if it's not OK
+                        console.error('Network response was not ok:', response.status, response.statusText, response.url);
+                        throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Hide loading overlay
+                    loadingOverlay.classList.add('hidden');
+
+
+                    if (data.success) {
+                        showNotification(successNotification); // Show success notification
+
+
+                        // Reset form fields
+                        thbAmountInput.value = '';
+                        exchangeRateInput.value = '';
+                        usdResultElement.textContent = '0.00 USD';
+
+
+                        // Navigate to summary tab after successful save
+                        setTimeout(() => {
+                            if (swiperInstance) { // Use swiperInstance
+                                swiperInstance.slideTo(0); // Go to summary tab
+                            }
+                            fetchSummary(); // Reload summary data
+                        }, 1000);
+                    } else {
+                        showNotification(errorNotification, data.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล'); // Show error notification
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving data:', error); // Log the error
+                    loadingOverlay.classList.add('hidden');
+                    showNotification(errorNotification, 'ไม่สามารถบันทึกข้อมูลได้: โปรดตรวจสอบ URL ของ Google Apps Script และการตั้งค่าการเข้าถึง'); // Show more specific error notification
+                });
+            });
+
+            // Handle form submission for saving sales data
+            sellForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const date = document.getElementById('dateSell').value;
+                const usdAmount = parseFloat(usdSellAmountInput.value);
+                const exchangeRate = parseFloat(exchangeRateSellInput.value);
+
+                if (!date || isNaN(usdAmount) || isNaN(exchangeRate)) {
+                    showNotification(errorNotification, 'กรุณากรอกข้อมูลการขายให้ครบถ้วนและถูกต้อง');
+                    return;
+                }
+
+                if (!window.userSheetId) {
+                    showNotification(errorNotification, 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
+                    return;
+                }
+
+                loadingOverlay.classList.remove('hidden');
+
+                const formData = new FormData();
+                formData.append('action', 'saveSale'); // New action for sales
+                formData.append('date', date);
+                formData.append('usdAmount', usdAmount);
+                formData.append('exchangeRate', exchangeRate);
+                formData.append('sheetId', window.userSheetId);
+
+                fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error('Network response was not ok for sale:', response.status, response.statusText, response.url);
+                        throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadingOverlay.classList.add('hidden');
+                    if (data.success) {
+                        showNotification(successNotification, 'บันทึกการขายสำเร็จ');
+                        // Reset form fields
+                        usdSellAmountInput.value = '';
+                        exchangeRateSellInput.value = '';
+                        thbReceiveResultElement.textContent = '0.00 ฿';
+                        setTimeout(() => {
+                            if (swiperInstance) {
+                                swiperInstance.slideTo(0); // Go to summary tab
+                            }
+                            fetchSummary(); // Reload summary data
+                        }, 1000);
+                    } else {
+                        showNotification(errorNotification, data.message || 'เกิดข้อผิดพลาดในการบันทึกการขาย');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving sale data:', error);
+                    loadingOverlay.classList.add('hidden');
+                    showNotification(errorNotification, 'ไม่สามารถบันทึกการขายได้: โปรดตรวจสอบ URL ของ Google Apps Script และการตั้งค่าการเข้าถึง');
+                });
+            });
+
+            // Form toggle logic
+            buyFormToggleBtn.addEventListener('click', () => {
+                buyFormToggleBtn.classList.add('active-toggle');
+                buyFormToggleBtn.classList.remove('active-sale-toggle'); // Ensure sale class is removed
+                sellFormToggleBtn.classList.remove('active-toggle');
+                sellFormToggleBtn.classList.remove('active-sale-toggle'); // Ensure sale class is removed
+                buyFormContainer.classList.remove('hidden');
+                sellFormContainer.classList.add('hidden');
+            });
+
+            sellFormToggleBtn.addEventListener('click', () => {
+                sellFormToggleBtn.classList.add('active-sale-toggle'); // Add sale-specific active class
+                sellFormToggleBtn.classList.remove('active-toggle'); // Remove generic active class
+                buyFormToggleBtn.classList.remove('active-toggle');
+                buyFormToggleBtn.classList.remove('active-sale-toggle'); // Ensure sale class is removed from buy
+                buyFormContainer.classList.add('hidden');
+                sellFormContainer.classList.remove('hidden');
+            });
+
+            // Set initial form view (default to buy)
+            buyFormToggleBtn.click();
+
+
+            // Close any open swipe item when clicking anywhere else on the document
+            document.addEventListener('click', (e) => {
+                if (activeSwipeItem && !activeSwipeItem.contains(e.target) && !e.target.closest('.delete-reveal')) {
+                    closeActiveSwipeItem();
+                }
+            });
+
+
+            // Click listener for history refresh button
+            refreshButton.addEventListener('click', fetchHistory);
+
+
+            // Click listener for summary refresh button
+            refreshSummaryButton.addEventListener('click', function() {
+                fetchSummary(); // Reload summary data (which will also trigger monthly data fetch)
+            });
+
+
+            // Function to set the theme
+            function setTheme(isDark) {
+                if (isDark) {
+                    body.classList.remove('light-theme');
+                    // Update TradingView widget theme to dark
+                    if (tradingViewWidgetContainer) {
+                        tradingViewWidgetContainer.innerHTML = ''; // Clear existing widget
+                        const script = document.createElement('script');
+                        script.type = 'text/javascript';
+                        script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+                        script.async = true;
+                        script.innerHTML = `{
+                            "autosize": true,
+                            "symbol": "FX_IDC:USDTHB",
+                            "interval": "D",
+                            "timezone": "Asia/Bangkok",
+                            "theme": "dark", // Set to dark
+                            "style": "1",
+                            "locale": "th_TH",
+                            "enable_publishing": false,
+                            "allow_symbol_change": true,
+                            "calendar": false,
+                            "support_host": "https://www.tradingview.com"
+                        }`;
+                        tradingViewWidgetContainer.appendChild(script);
+                    }
+                } else {
+                    body.classList.add('light-theme');
+                    // Update TradingView widget theme to light
+                    if (tradingViewWidgetContainer) {
+                        tradingViewWidgetContainer.innerHTML = ''; // Clear existing widget
+                        const script = document.createElement('script');
+                        script.type = 'text/javascript';
+                        script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+                        script.async = true;
+                        script.innerHTML = `{
+                            "autosize": true,
+                            "symbol": "FX_IDC:USDTHB",
+                            "interval": "D",
+                            "timezone": "Asia/Bangkok",
+                            "theme": "light", // Set to light
+                            "style": "1",
+                            "locale": "th_TH",
+                            "enable_publishing": false,
+                            "allow_symbol_change": true,
+                            "calendar": false,
+                            "support_host": "https://www.tradingview.com"
+                        }`;
+                        tradingViewWidgetContainer.appendChild(script);
+                    }
+                }
+            }
+
+            // Set initial theme based on checkbox state (it's checked by default in HTML for dark)
+            // This needs to be called after all elements are initialized
+            setTheme(themeToggle.checked);
+
+            themeToggle.addEventListener('change', function() {
+                console.log('Theme toggle:', this.checked ? 'Dark' : 'Light');
+                setTheme(this.checked);
+            });
+
+
+            // Notification toggle functionality (placeholder)
+            const notificationToggle = document.getElementById('notificationToggle');
+            notificationToggle.addEventListener('change', function() {
+                console.log('Notification toggle:', this.checked ? 'On' : 'Off');
+            });
+
+
+            // Event listener for saving Google Sheet ID in settings
+            saveSheetIdButton.addEventListener('click', async function() {
+                const newSheetId = sheetIdInput.value.trim();
+                if (newSheetId) {
+                    loadingOverlay.classList.remove('hidden');
+                    const success = await saveUserSheetId(newSheetId); // Call the Firebase save function
+                    loadingOverlay.classList.add('hidden');
+                    if (success) {
+                        showNotification(successNotification, 'บันทึก Google Sheet ID สำเร็จ');
+                        // Reload summary data with the new sheet ID
+                        fetchSummary();
+                    } else {
+                        showNotification(errorNotification, 'ไม่สามารถบันทึก Google Sheet ID ได้');
+                    }
+                } else {
+                    showNotification(errorNotification, 'กรุณาป้อน Google Sheet ID');
+                }
+            });
+
+
+            // Initial calls are now managed by the onAuthStateChanged listener
+            // fetchSummary() will be called once Firebase authentication is complete and userSheetId is fetched.
+        }
+    </script>
+</head>
+<body>
+    <div class="swiper mySwiper">
+        <div class="swiper-wrapper">
+            <div class="swiper-slide">
+                <div class="container">
+                    <div class="flex justify-between items-center mb-6 py-2">
+                        <h2 class="text-2xl font-bold text-gray-100">สรุปข้อมูล</h2>
+                        <button id="refreshSummaryButton" class="text-blue-400 hover:text-blue-300 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            รีเฟรช
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+                        <div id="totalCard" class="summary-card fade-in">
+                            <div class="flex justify-center py-8">
+                                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10"></div>
+                            </div>
+                        </div>
+
+
+                        <div id="ratesCard" class="summary-card fade-in">
+                            <div class="flex justify-center py-8">
+                                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10"></div>
+                            </div>
+                        </div>
+
+
+                        <div id="buyCard" class="summary-card fade-in">
+                            <div class="flex justify-center py-8">
+                                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10"></div>
+                            </div>
+                        </div>
+
+                        <div id="profitLossCard" class="summary-card fade-in">
+                            <div class="flex justify-center py-8">
+                                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tradingview-widget-container summary-card w-full">
+                        <div class="card-header mb-0"> <span class="card-icon">📊</span>
+                            <h3 class="card-title text-xl font-bold">กราฟ USD/THB</h3>
+                        </div>
+                        <p class="card-status mb-4">ข้อมูลแบบเรียลไทม์</p>
+                        <div class="tradingview-widget-container__widget h-full"></div>
+                        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                        {
+                            "autosize": true,
+                            "symbol": "FX_IDC:USDTHB",
+                            "interval": "D",
+                            "timezone": "Asia/Bangkok",
+                            "theme": "dark",
+                            "style": "1",
+                            "locale": "th_TH",
+                            "enable_publishing": false,
+                            "allow_symbol_change": true,
+                            "calendar": false,
+                            "support_host": "https://www.tradingview.com"
+                        }
+                        </script>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="swiper-slide">
+                <div class="container">
+                    <h2 class="text-2xl font-bold text-gray-100 mb-6 text-center">บันทึกธุรกรรม USD</h2>
+
+                    <div class="form-toggle-container">
+                        <button id="buyFormToggleBtn" class="form-toggle-button active-toggle">บันทึกการซื้อ</button>
+                        <button id="sellFormToggleBtn" class="form-toggle-button">บันทึกการขาย</button>
+                    </div>
+
+                    <div id="buyFormContainer">
+                        <form id="usdBuyForm" class="space-y-4">
+                            <div>
+                                <label for="date" class="block text-sm font-medium text-gray-400 mb-1">วันที่</label>
+                                <input type="date" id="date" name="date" required
+                                    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+
+
+                            <div>
+                                <label for="thbAmount" class="block text-sm font-medium text-gray-400 mb-1">จำนวนเงินบาท</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500">฿</span>
+                                    </div>
+                                    <input type="number" id="thbAmount" name="thbAmount" step="0.01" min="0" required
+                                        class="w-full pl-8 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="0.00">
+                                    </div>
+                            </div>
+
+
+                            <div>
+                                <label for="exchangeRate" class="block text-sm font-medium text-gray-400 mb-1">อัตราแลกเปลี่ยน (บาท/USD)</label>
+                                <div class="relative">
+                                    <input type="number" id="exchangeRate" name="exchangeRate" step="0.01" min="0" required
+                                        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="35.50">
+                                </div>
+                            </div>
+
+
+                            <div class="bg-[#2C2C2E] p-4 rounded-md">
+                                <p class="text-sm text-gray-400 mb-2">จำนวน USD ที่ได้รับ:</p>
+                                <p id="usdResult" class="text-xl font-semibold text-blue-400">0.00 USD</p>
+                            </div>
+
+
+                            <button type="submit"
+                                class="w-full form-button flex items-center justify-center">
+                                <span>บันทึกการซื้อ</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <div id="sellFormContainer" class="hidden">
+                        <form id="usdSellForm" class="space-y-4">
+                            <div>
+                                <label for="dateSell" class="block text-sm font-medium text-gray-400 mb-1">วันที่</label>
+                                <input type="date" id="dateSell" name="dateSell" required
+                                    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+
+
+                            <div>
+                                <label for="usdSellAmount" class="block text-sm font-medium text-gray-400 mb-1">จำนวน USD ที่ต้องการขาย</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500">$</span>
+                                    </div>
+                                    <input type="number" id="usdSellAmount" name="usdSellAmount" step="0.01" min="0" required
+                                        class="w-full pl-8 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="0.00">
+                                </div>
+                            </div>
+
+
+                            <div>
+                                <label for="exchangeRateSell" class="block text-sm font-medium text-gray-400 mb-1">อัตราแลกเปลี่ยน (บาท/USD)</label>
+                                <div class="relative">
+                                    <input type="number" id="exchangeRateSell" name="exchangeRateSell" step="0.01" min="0" required
+                                        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="35.50">
+                                </div>
+                            </div>
+
+
+                            <div class="bg-[#2C2C2E] p-4 rounded-md">
+                                <p class="text-sm text-gray-400 mb-2">จำนวนเงินบาทที่ได้รับ:</p>
+                                <p id="thbReceiveResult" class="text-xl font-semibold text-blue-400">0.00 ฿</p>
+                            </div>
+
+
+                            <button type="submit"
+                                class="w-full form-button sale-button flex items-center justify-center">
+                                <span>บันทึกการขาย</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="swiper-slide">
+                <div class="container">
+                    <div class="bg-[#2C2C2E] rounded-lg shadow-lg p-6 flex flex-col h-full">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-semibold text-gray-100">ประวัติธุรกรรม</h2>
+                            <button id="refreshButton" class="text-blue-400 hover:text-blue-300 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                                รีเฟรช
+                            </button>
+                        </div>
+                        <div id="historyList" class="space-y-3">
+                            <div class="flex justify-center py-8">
+                                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="swiper-slide">
+                <div class="container">
+                    <div class="bg-[#2C2C2E] rounded-lg shadow-lg p-6">
+                        <h2 class="text-xl font-semibold text-gray-100 mb-6">ตั้งค่า</h2>
+
+
+                        <div class="space-y-4">
+                            <div class="p-4 border border-gray-700 rounded-md">
+                                <label for="sheetIdInput" class="block text-sm font-medium text-gray-400 mb-2">Google Sheet ID</label>
+                                <input type="text" id="sheetIdInput" placeholder="ป้อน Google Sheet ID ของคุณ"
+                                    class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
+                                <button id="saveSheetIdButton"
+                                    class="w-full form-button flex items-center justify-center">
+                                    <span>บันทึก Sheet ID</span>
+                                </button>
+                                <p class="text-xs text-gray-500 mt-2">โปรดตรวจสอบให้แน่ใจว่า Google Sheet ของคุณสามารถเข้าถึงได้โดย Apps Script</p>
+                            </div>
+
+
+                            <div class="p-4 border border-gray-700 rounded-md">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-gray-100">User ID</span>
+                                    <span id="displayUserId" class="text-gray-400 text-sm break-all">กำลังโหลด...</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">ใช้สำหรับแยกข้อมูลผู้ใช้</p>
+                            </div>
+
+
+                            <div class="p-4 border border-gray-700 rounded-md">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-gray-100">ธีม</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="themeToggle" checked> <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <p class="text-sm text-gray-500 mt-1">โหมดมืด</p>
+                            </div>
+
+
+                            <div class="p-4 border border-gray-700 rounded-md">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-gray-100">แจ้งเตือน</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="notificationToggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <p class="text-sm text-gray-500 mt-1">เปิดการแจ้งเตือน</p>
+                            </div>
+
+
+                            <div class="p-4 border border-gray-700 rounded-md">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-gray-100">ภาษา</span>
+                                    <select class="border border-gray-600 rounded-md px-2 py-1 text-sm bg-[#121212] text-gray-100">
+                                        <option value="th">ไทย</option>
+                                        <option value="en">English</option>
+                                    </select>
+                                </div>
+                            </div>
+
+
+                            <div class="p-4 border border-gray-700 rounded-md">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-gray-100">เวอร์ชัน</span>
+                                    <span class="text-gray-400">1.0.0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="bottom-nav">
+        <div class="grid grid-cols-4 gap-2">
+            <div class="nav-item active" data-index="0"> <div class="emoji">📈</div>
+                <div class="label">สรุป</div>
+            </div>
+            <div class="nav-item" data-index="1"> <div class="emoji">📝</div>
+                <div class="label">บันทึก</div>
+            </div>
+            <div class="nav-item" data-index="2"> <div class="emoji">📚</div>
+                <div class="label">ประวัติ</div>
+            </div>
+            <div class="nav-item" data-index="3"> <div class="emoji">⚙️</div>
+                <div class="label">ตั้งค่า</div>
+            </div>
+        </div>
+        <div class="page-indicator">
+            <div class="indicator active"></div>
+            <div class="indicator"></div>
+            <div class="indicator"></div>
+            <div class="indicator"></div>
+        </div>
+    </div>
+
+    <div id="customModalOverlay" class="custom-modal-overlay hidden">
+        <div class="custom-modal-content">
+            <h3 id="customModalTitle"></h3>
+            <p id="customModalMessage"></p>
+            <div class="custom-modal-actions">
+                <button id="customModalConfirmBtn" class="confirm">ยืนยัน</button>
+                <button id="customModalCancelBtn" class="cancel">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-[#2C2C2E] p-5 rounded-lg flex flex-col items-center">
+            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+            <h2 class="text-center text-gray-100 text-xl font-semibold">กำลังบันทึกข้อมูล...</h2>
+        </div>
+    </div>
+
+
+    <div id="successNotification" class="fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-md shadow-lg transform transition-transform duration-300 translate-x-full z-50">
+        <div class="flex items-center">
+            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <p>บันทึกข้อมูลสำเร็จ</p>
+        </div>
+    </div>
+
+
+    <div id="errorNotification" class="fixed top-4 right-4 bg-red-600 text-white px-6 py-3 rounded-md shadow-lg transform transition-transform duration-300 translate-x-full z-50">
+        <div class="flex items-center">
+            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            <p>เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง</p>
+        </div>
+    </div>
+</body>
+</html>

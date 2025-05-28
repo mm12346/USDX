@@ -720,7 +720,8 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // Updated imports for email/password authentication
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Your web app's Firebase configuration (provided by user)
@@ -1780,22 +1781,43 @@
             }
         }
 
-        // Function to handle Google Sign-in
-        async function signInWithGoogle() {
-            const provider = new GoogleAuthProvider();
+        // Function to handle Email/Password Sign-up
+        async function signUpWithEmailPassword(email, password) {
             try {
-                // Log the current origin to help debug auth/unauthorized-domain errors
-                console.log("Current window origin:", window.location.origin);
-                await signInWithPopup(auth, provider);
-                // onAuthStateChanged will handle setting userId and initializing app components
+                await createUserWithEmailAndPassword(auth, email, password);
+                showNotification(successNotification, 'ลงทะเบียนสำเร็จ! คุณสามารถเข้าสู่ระบบได้แล้ว');
             } catch (error) {
-                console.error("Error during Google Sign-in:", error);
-                // Specific error for unauthorized domain
-                if (error.code === 'auth/unauthorized-domain') {
-                    showNotification(errorNotification, 'เข้าสู่ระบบไม่สำเร็จ: โดเมนไม่ได้รับอนุญาต. โปรดเพิ่มโดเมนปัจจุบันของคุณ (' + window.location.origin + ') ใน Firebase Console > Authentication > Settings > Authorized domains.');
+                console.error("Error during Email/Password Sign-up:", error);
+                let errorMessage = 'ลงทะเบียนไม่สำเร็จ: ';
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage += 'อีเมลนี้ถูกใช้ไปแล้ว';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage += 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage += 'รูปแบบอีเมลไม่ถูกต้อง';
                 } else {
-                    showNotification(errorNotification, 'เข้าสู่ระบบไม่สำเร็จ: ' + error.message);
+                    errorMessage += error.message;
                 }
+                showNotification(errorNotification, errorMessage);
+            }
+        }
+
+        // Function to handle Email/Password Sign-in
+        async function signInWithEmailPassword(email, password) {
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                showNotification(successNotification, 'เข้าสู่ระบบสำเร็จ!');
+            } catch (error) {
+                console.error("Error during Email/Password Sign-in:", error);
+                let errorMessage = 'เข้าสู่ระบบไม่สำเร็จ: ';
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    errorMessage += 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage += 'รูปแบบอีเมลไม่ถูกต้อง';
+                } else {
+                    errorMessage += error.message;
+                }
+                showNotification(errorNotification, errorMessage);
             }
         }
 
@@ -1841,8 +1863,12 @@
             const sheetIdInput = document.getElementById('sheetIdInput');
             const saveSheetIdButton = document.getElementById('saveSheetIdButton');
             const displayUserId = document.getElementById('displayUserId');
-            const signInButton = document.getElementById('signInButton'); // New sign-in button
-            const signOutButton = document.getElementById('signOutButton'); // New sign-out button
+            // New email/password input fields and buttons
+            const emailInput = document.getElementById('emailInput');
+            const passwordInput = document.getElementById('passwordInput');
+            const signInEmailPasswordButton = document.getElementById('signInEmailPasswordButton');
+            const signUpEmailPasswordButton = document.getElementById('signUpEmailPasswordButton');
+            const signOutButton = document.getElementById('signOutButton');
 
 
             // Theme toggle elements
@@ -2248,9 +2274,20 @@
                 }
             });
 
-            // Event listeners for new sign-in/sign-out buttons
-            if (signInButton) {
-                signInButton.addEventListener('click', signInWithGoogle);
+            // Event listeners for new sign-in/sign-up buttons
+            if (signInEmailPasswordButton) {
+                signInEmailPasswordButton.addEventListener('click', () => {
+                    const email = emailInput.value;
+                    const password = passwordInput.value;
+                    signInWithEmailPassword(email, password);
+                });
+            }
+            if (signUpEmailPasswordButton) {
+                signUpEmailPasswordButton.addEventListener('click', () => {
+                    const email = emailInput.value;
+                    const password = passwordInput.value;
+                    signUpWithEmailPassword(email, password);
+                });
             }
             if (signOutButton) {
                 signOutButton.addEventListener('click', signOutUser);
@@ -2265,8 +2302,9 @@
             // Listen for auth state changes to get userId and fetch user's sheet ID
             onAuthStateChanged(window.auth, async (user) => {
                 const displayUserIdElement = document.getElementById('displayUserId');
-                const signInButton = document.getElementById('signInButton');
-                const signOutButton = document.getElementById('signOutButton');
+                const authSection = document.getElementById('authSection'); // The div containing email/password inputs and buttons
+                const emailInput = document.getElementById('emailInput');
+                const passwordInput = document.getElementById('passwordInput');
 
                 if (user) {
                     window.userId = user.uid;
@@ -2274,8 +2312,18 @@
                     if (displayUserIdElement) {
                         displayUserIdElement.textContent = window.userId;
                     }
-                    if (signInButton) signInButton.classList.add('hidden');
-                    if (signOutButton) signOutButton.classList.remove('hidden');
+                    if (authSection) {
+                        // Hide email/password inputs and show sign-out button
+                        authSection.innerHTML = `
+                            <h3 class="font-medium text-gray-100 mb-2">การเข้าสู่ระบบ</h3>
+                            <button id="signOutButton" class="w-full form-button bg-red-500 hover:bg-red-600">
+                                ออกจากระบบ
+                            </button>
+                            <p class="text-xs text-gray-500 mt-1">เข้าสู่ระบบเพื่อบันทึกข้อมูลของคุณ</p>
+                        `;
+                        // Re-attach event listener for signOutButton after re-rendering
+                        document.getElementById('signOutButton').addEventListener('click', signOutUser);
+                    }
 
                     await fetchUserSheetId(); // Fetch user's sheet ID
 
@@ -2296,8 +2344,40 @@
                     if (displayUserIdElement) {
                         displayUserIdElement.textContent = 'N/A (ไม่ได้เข้าสู่ระบบ)';
                     }
-                    if (signInButton) signInButton.classList.remove('hidden');
-                    if (signOutButton) signOutButton.classList.add('hidden');
+                    if (authSection) {
+                        // Show email/password inputs and sign-in/sign-up buttons
+                        authSection.innerHTML = `
+                            <h3 class="font-medium text-gray-100 mb-2">การเข้าสู่ระบบ</h3>
+                            <div class="mb-2">
+                                <label for="emailInput" class="block text-sm font-medium text-gray-400 mb-1">อีเมล</label>
+                                <input type="email" id="emailInput" placeholder="your@example.com"
+                                    class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#121212] text-gray-100">
+                            </div>
+                            <div class="mb-4">
+                                <label for="passwordInput" class="block text-sm font-medium text-gray-400 mb-1">รหัสผ่าน</label>
+                                <input type="password" id="passwordInput" placeholder="********"
+                                    class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#121212] text-gray-100">
+                            </div>
+                            <button id="signInEmailPasswordButton" class="w-full form-button mb-2">
+                                เข้าสู่ระบบ
+                            </button>
+                            <button id="signUpEmailPasswordButton" class="w-full form-button bg-gray-600 hover:bg-gray-700">
+                                ลงทะเบียน
+                            </button>
+                            <p class="text-xs text-gray-500 mt-1">เข้าสู่ระบบเพื่อบันทึกข้อมูลของคุณ</p>
+                        `;
+                        // Re-attach event listeners for newly created buttons
+                        document.getElementById('signInEmailPasswordButton').addEventListener('click', () => {
+                            const email = document.getElementById('emailInput').value;
+                            const password = document.getElementById('passwordInput').value;
+                            signInWithEmailPassword(email, password);
+                        });
+                        document.getElementById('signUpEmailPasswordButton').addEventListener('click', () => {
+                            const email = document.getElementById('emailInput').value;
+                            const password = document.getElementById('passwordInput').value;
+                            signUpWithEmailPassword(email, password);
+                        });
+                    }
 
                     // Clear summary and history if no user is logged in
                     const noAuthMessage = '<p class="text-gray-500 text-center py-4">โปรดเข้าสู่ระบบเพื่อดูข้อมูล</p>';
@@ -2536,10 +2616,23 @@
                                 <p class="text-xs text-gray-500 mt-1">ใช้สำหรับแยกข้อมูลผู้ใช้</p>
                             </div>
 
-                            <div class="p-4 border border-gray-700 rounded-md">
+                            <div id="authSection" class="p-4 border border-gray-700 rounded-md">
                                 <h3 class="font-medium text-gray-100 mb-2">การเข้าสู่ระบบ</h3>
-                                <button id="signInButton" class="w-full form-button mb-2">
-                                    เข้าสู่ระบบด้วย Google
+                                <div class="mb-2">
+                                    <label for="emailInput" class="block text-sm font-medium text-gray-400 mb-1">อีเมล</label>
+                                    <input type="email" id="emailInput" placeholder="your@example.com"
+                                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#121212] text-gray-100">
+                                </div>
+                                <div class="mb-4">
+                                    <label for="passwordInput" class="block text-sm font-medium text-gray-400 mb-1">รหัสผ่าน</label>
+                                    <input type="password" id="passwordInput" placeholder="********"
+                                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#121212] text-gray-100">
+                                </div>
+                                <button id="signInEmailPasswordButton" class="w-full form-button mb-2">
+                                    เข้าสู่ระบบ
+                                </button>
+                                <button id="signUpEmailPasswordButton" class="w-full form-button bg-gray-600 hover:bg-gray-700">
+                                    ลงทะเบียน
                                 </button>
                                 <button id="signOutButton" class="w-full form-button bg-red-500 hover:bg-red-600 hidden">
                                     ออกจากระบบ

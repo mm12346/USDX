@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>บันทึกการซื้อ USD</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
@@ -831,8 +831,8 @@
         const profitLossCardEl = document.getElementById('profitLossCard'); // New profit/loss card
         const historyList = document.getElementById('historyList'); // For history tab
         const updateNotification = document.getElementById('updateNotification'); // Get update notification element
-        const refreshAppButton = document.getElementById('refreshAppButton'); // Get refresh button
-        const closeUpdateNotification = document.getElementById('closeUpdateNotification'); // Get close button
+        // const refreshAppButton = document.getElementById('refreshAppButton'); // Removed as service worker is commented out
+        // const closeUpdateNotification = document.getElementById('closeUpdateNotification'); // Removed as service worker is commented out
 
         // Custom Modal elements (moved to global scope)
         const customModalOverlay = document.getElementById('customModalOverlay');
@@ -2261,7 +2261,8 @@
                         script.type = 'text/javascript';
                         script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
                         script.async = true;
-                        script.innerHTML = `{
+                        // Corrected JSON string for TradingView widget settings
+                        script.innerHTML = JSON.stringify({
                             "autosize": true,
                             "symbol": "FX_IDC:USDTHB",
                             "interval": "D",
@@ -2273,7 +2274,7 @@
                             "allow_symbol_change": true,
                             "calendar": false,
                             "support_host": "https://www.tradingview.com"
-                        }`;
+                        });
                         tradingViewWidgetContainer.appendChild(script);
                     }
                 } else {
@@ -2285,7 +2286,8 @@
                         script.type = 'text/javascript';
                         script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
                         script.async = true;
-                        script.innerHTML = `{
+                        // Corrected JSON string for TradingView widget settings
+                        script.innerHTML = JSON.stringify({
                             "autosize": true,
                             "symbol": "FX_IDC:USDTHB",
                             "interval": "D",
@@ -2297,7 +2299,7 @@
                             "allow_symbol_change": true,
                             "calendar": false,
                             "support_host": "https://www.tradingview.com"
-                        }`;
+                        });
                         tradingViewWidgetContainer.appendChild(script);
                     }
                 }
@@ -2840,10 +2842,8 @@
     </div>
 
     <div id="updateNotification" class="hidden fixed bottom-24 left-1/2 transform -translate-x-1/2 translate-y-full bg-[#2C2C2E] text-white px-6 py-3 rounded-md shadow-lg z-50">
-        <button class="close-button" id="closeUpdateNotification">&times;</button>
         <p class="text-center">มีการอัปเดตใหม่! กรุณารีเฟรชเพื่อใช้งานเวอร์ชันล่าสุด</p>
-        <button id="refreshAppButton" class="ml-4">รีเฟรช</button>
-    </div>
+        </div>
 
 
     <div id="customModalOverlay" class="custom-modal-overlay hidden">

@@ -775,6 +775,11 @@
         #updateNotification .close-button:hover {
             color: white;
         }
+
+        /* Ensure .hidden truly hides elements */
+        .hidden {
+            display: none !important;
+        }
     </style>
     <script type="module">
         // Import Firebase modules
@@ -1746,38 +1751,51 @@
 
 
                 if (data.success && data.summary) {
-                    summaryData = data.summary; // Store summary data globally
-                    displaySummary(data.summary); // Display the summary
+                    // Validate essential summary fields
+                    const { totalTHB, totalUSD, targetRate, currentRate, realizedProfitLoss } = data.summary;
 
-                    // Set default card states after summary is displayed
-                    const totalCardToggle = document.getElementById('toggle-totalCard');
-                    const ratesCardToggle = document.getElementById('toggle-ratesCard');
-                    const buyCardToggle = document.getElementById('toggle-buyCard'); // Get buy card toggle
-                    const profitLossCardToggle = document.getElementById('toggle-profitLossCard');
+                    if (typeof totalTHB === 'number' && typeof totalUSD === 'number' &&
+                        typeof targetRate === 'number' && typeof currentRate === 'number' &&
+                        typeof realizedProfitLoss === 'number') {
+                        summaryData = data.summary; // Store summary data globally
+                        displaySummary(data.summary); // Display the summary
+                        // Set default card states after summary is displayed
+                        const totalCardToggle = document.getElementById('toggle-totalCard');
+                        const ratesCardToggle = document.getElementById('toggle-ratesCard');
+                        const buyCardToggle = document.getElementById('toggle-buyCard');
+                        const profitLossCardToggle = document.getElementById('toggle-profitLossCard');
 
-                    if (totalCardToggle) {
-                        totalCardToggle.checked = true; // Set to checked
-                        toggleCardState(totalCardEl, totalCardToggle);
+                        if (totalCardToggle) {
+                            totalCardToggle.checked = true;
+                            toggleCardState(totalCardEl, totalCardToggle);
+                        }
+                        if (ratesCardToggle) {
+                            ratesCardToggle.checked = true;
+                            toggleCardState(ratesCardEl, ratesCardToggle);
+                        }
+                        if (buyCardToggle) {
+                            buyCardToggle.checked = true;
+                            toggleCardState(buyCardEl, buyCardToggle);
+                        }
+                        if (profitLossCardToggle) {
+                            profitLossCardToggle.checked = true;
+                            toggleCardState(profitLossCardEl, profitLossCardToggle);
+                        }
+                    } else {
+                        console.warn("Summary data received but essential fields are not numbers:", data.summary);
+                        const invalidDataMessage = '<p class="text-red-500 text-center py-4">ข้อมูลสรุปไม่ถูกต้องหรือไม่สมบูรณ์</p>';
+                        totalCardEl.innerHTML = invalidDataMessage;
+                        ratesCardEl.innerHTML = invalidDataMessage;
+                        buyCardEl.innerHTML = invalidDataMessage;
+                        profitLossCardEl.innerHTML = invalidDataMessage;
+                        showNotification(errorNotification, 'ข้อมูลสรุปไม่ถูกต้องหรือไม่สมบูรณ์');
                     }
-                    if (ratesCardToggle) {
-                        ratesCardToggle.checked = true; // Set to checked
-                        toggleCardState(ratesCardEl, ratesCardToggle);
-                    }
-                    if (buyCardToggle) {
-                        buyCardToggle.checked = true; // Set to checked
-                        toggleCardState(buyCardEl, buyCardToggle);
-                    }
-                    if (profitLossCardToggle) {
-                        profitLossCardToggle.checked = true; // Set to checked
-                        toggleCardState(profitLossCardEl, profitLossCardToggle);
-                    }
-
                 } else {
                     const noDataMessage = '<p class="text-gray-500 text-center py-4">ไม่พบข้อมูลสรุป</p>';
                     totalCardEl.innerHTML = noDataMessage;
                     ratesCardEl.innerHTML = noDataMessage;
                     buyCardEl.innerHTML = noDataMessage;
-                    profitLossCardEl.innerHTML = noSheetIdMessage;
+                    profitLossCardEl.innerHTML = noDataMessage; // Corrected from noSheetIdMessage
                 }
             })
             .catch(error => {
@@ -2364,8 +2382,17 @@
             // fetchSummary() will be called once Firebase authentication is complete and userSheetId is fetched.
         }
 
+        let isAppInitialized = false; // New flag to ensure initializeAppComponent runs only once
+
         // This function will be called once the DOM is fully loaded.
         document.addEventListener('DOMContentLoaded', async function() {
+            // Ensure update notification is hidden on load if service worker is not active
+            const updateNotification = document.getElementById('updateNotification');
+            if (updateNotification) {
+                updateNotification.classList.add('hidden');
+                updateNotification.classList.add('translate-y-full');
+            }
+
             // Service Worker Registration (Commented out due to protocol error in Canvas environment)
             /*
             if ('serviceWorker' in navigator) {
@@ -2522,7 +2549,10 @@
                     }
                 }
                 // Initialize app components only once, after the initial auth state is determined
-                initializeAppComponent();
+                if (!isAppInitialized) {
+                    initializeAppComponent();
+                    isAppInitialized = true;
+                }
             });
         });
     </script>

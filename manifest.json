@@ -1,19 +1,19 @@
 {
-  "name": "USDX",
-  "short_name": "USDX",
-  "description": "บันทึกและติดตามการซื้อขาย USD ของคุณ",
+  "name": "บันทึกการซื้อ USD",
+  "short_name": "USD Tracker",
+  "description": "แอปพลิเคชันสำหรับบันทึกและติดตามการซื้อขาย USD",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#5C5CFF",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "https://placehold.co/192x192/5C5CFF/FFFFFF?text=USD",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "https://placehold.co/512x512/5C5CFF/FFFFFF?text=USD",
       "sizes": "512x512",
       "type": "image/png"
     }

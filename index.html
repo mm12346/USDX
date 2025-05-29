@@ -2575,7 +2575,7 @@
             }
 
             // Service Worker Registration (Commented out due to protocol error in Canvas environment)
-            
+            /*
             if ('serviceWorker' in navigator) {
                 const serviceWorkerUrl = '/service-worker.js';
                 console.log('Attempting to register Service Worker at:', serviceWorkerUrl);
@@ -2614,7 +2614,7 @@
                         window.location.reload();
                     }
                 });
-
+                
                 // Event listener for the refresh button in the update notification
                 refreshAppButton.addEventListener('click', () => {
                     if (newWorker) {
@@ -2634,7 +2634,7 @@
                     }, 300);
                 });
             }
-        
+            */
 
             // Listen for auth state changes to get userId and fetch user's sheet ID
             onAuthStateChanged(window.auth, async (user) => {
@@ -2844,7 +2844,7 @@
                                 </button>
                             </div>
                         </div>
-                        <p class="login-version text-center">V 1.0.7</p>
+                        <p class="login-version text-center">V 1.0.6</p>
                     </div>
                 </div>
             </div>
@@ -3099,7 +3099,7 @@
                             <div class="p-4 border border-gray-700 rounded-md">
                                 <div class="flex justify-between items-center">
                                     <span class="font-medium text-gray-100">เวอร์ชัน</span>
-                                    <span class="text-gray-400">1.0.7</span>
+                                    <span class="text-gray-400">1.0.6</span>
                                 </div>
                             </div>
 

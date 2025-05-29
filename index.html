@@ -2616,21 +2616,19 @@
 
                     await fetchUserSheetId(); // Fetch user's sheet ID
 
-                    // After fetching sheet ID, decide what to do
-                    if (window.userSheetId) {
-                        fetchSummary(); // Load summary data immediately if sheet ID exists
-                        if (swiperInstance) {
-                            swiperInstance.slideTo(1); // Go to summary tab (now index 1)
-                            document.querySelector('.bottom-nav').classList.remove('hidden'); // Show bottom nav
-                        }
-                    } else {
-                        // Show notification and navigate to settings if no sheet ID
-                        showNotification(document.getElementById('errorNotification'), 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
-                        if (swiperInstance) {
-                            swiperInstance.slideTo(4); // Navigate to settings tab (now index 4)
-                            document.querySelector('.bottom-nav').classList.remove('hidden'); // Show bottom nav
-                        }
+                    // Always go to summary if logged in
+                    if (swiperInstance) {
+                        swiperInstance.slideTo(1); // Go to summary tab (index 1)
+                        document.querySelector('.bottom-nav').classList.remove('hidden'); // Show bottom nav
                     }
+
+                    // Then, if sheet ID is missing, show notification. The user is already on the summary page.
+                    if (!window.userSheetId) {
+                        showNotification(document.getElementById('errorNotification'), 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
+                    } else {
+                        fetchSummary(); // Only fetch summary if sheet ID exists
+                    }
+
                 } else {
                     window.userId = null;
                     window.userSheetId = null;
@@ -2789,7 +2787,7 @@
                                 </button>
                             </div>
                         </div>
-                        <p class="login-version text-center">V 1.0.5</p>
+                        <p class="login-version text-center">V 1.0.6</p>
                     </div>
                 </div>
             </div>
@@ -3044,7 +3042,7 @@
                             <div class="p-4 border border-gray-700 rounded-md">
                                 <div class="flex justify-between items-center">
                                     <span class="font-medium text-gray-100">เวอร์ชัน</span>
-                                    <span class="text-gray-400">1.0.5</span>
+                                    <span class="text-gray-400">1.0.6</span>
                                 </div>
                             </div>
 

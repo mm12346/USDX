@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>บันทึกการซื้อ USD</title>
+    <link rel="manifest" href="/manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -769,7 +770,7 @@
         const totalCardEl = document.getElementById('totalCard');
         const ratesCardEl = document.getElementById('ratesCard');
         const buyCardEl = document.getElementById('buyCard');
-        const profitLossCardEl = document.getElementById('profitLossCard'); // New profit/loss card
+        const profitLossCardEl = document = document.getElementById('profitLossCard'); // New profit/loss card
         const historyList = document.getElementById('historyList'); // For history tab
 
         // Custom Modal elements (moved to global scope)
@@ -2303,8 +2304,13 @@
             onAuthStateChanged(window.auth, async (user) => {
                 const displayUserIdElement = document.getElementById('displayUserId');
                 const authSection = document.getElementById('authSection'); // The div containing email/password inputs and buttons
-                const emailInput = document.getElementById('emailInput');
-                const passwordInput = document.getElementById('passwordInput');
+                // Ensure these elements are re-fetched as they might be re-rendered
+                let emailInput = document.getElementById('emailInput');
+                let passwordInput = document.getElementById('passwordInput');
+                let signInEmailPasswordButton = document.getElementById('signInEmailPasswordButton');
+                let signUpEmailPasswordButton = document.getElementById('signUpEmailPasswordButton');
+                let signOutButton = document.getElementById('signOutButton');
+
 
                 if (user) {
                     window.userId = user.uid;
@@ -2322,7 +2328,8 @@
                             <p class="text-xs text-gray-500 mt-1">เข้าสู่ระบบเพื่อบันทึกข้อมูลของคุณ</p>
                         `;
                         // Re-attach event listener for signOutButton after re-rendering
-                        document.getElementById('signOutButton').addEventListener('click', signOutUser);
+                        signOutButton = document.getElementById('signOutButton'); // Re-fetch the new button
+                        if (signOutButton) signOutButton.addEventListener('click', signOutUser);
                     }
 
                     await fetchUserSheetId(); // Fetch user's sheet ID
@@ -2367,14 +2374,19 @@
                             <p class="text-xs text-gray-500 mt-1">เข้าสู่ระบบเพื่อบันทึกข้อมูลของคุณ</p>
                         `;
                         // Re-attach event listeners for newly created buttons
-                        document.getElementById('signInEmailPasswordButton').addEventListener('click', () => {
-                            const email = document.getElementById('emailInput').value;
-                            const password = document.getElementById('passwordInput').value;
+                        emailInput = document.getElementById('emailInput');
+                        passwordInput = document.getElementById('passwordInput');
+                        signInEmailPasswordButton = document.getElementById('signInEmailPasswordButton');
+                        signUpEmailPasswordButton = document.getElementById('signUpEmailPasswordButton');
+
+                        if (signInEmailPasswordButton) signInEmailPasswordButton.addEventListener('click', () => {
+                            const email = emailInput.value;
+                            const password = passwordInput.value;
                             signInWithEmailPassword(email, password);
                         });
-                        document.getElementById('signUpEmailPasswordButton').addEventListener('click', () => {
-                            const email = document.getElementById('emailInput').value;
-                            const password = document.getElementById('passwordInput').value;
+                        if (signUpEmailPasswordButton) signUpEmailPasswordButton.addEventListener('click', () => {
+                            const email = emailInput.value;
+                            const password = passwordInput.value;
                             signUpWithEmailPassword(email, password);
                         });
                     }
@@ -2397,7 +2409,7 @@
             });
         });
     </script>
-</head>
+    <script src="app.js" type="module"></script> </head>
 <body>
     <div class="swiper mySwiper">
         <div class="swiper-wrapper">

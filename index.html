@@ -740,7 +740,12 @@
             align-items: center;
             gap: 1rem;
             transition: transform 0.3s ease-out;
-            max-width: 90%;
+            max-width: calc(100% - 2rem); /* Adjusted max-width */
+            left: 1rem; /* Adjusted left position */
+            right: 1rem; /* Adjusted right position */
+            margin-left: auto; /* Center horizontally */
+            margin-right: auto; /* Center horizontally */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
         }
 
         #updateNotification.translate-y-0 {
@@ -1770,7 +1775,7 @@
                     totalCardEl.innerHTML = noDataMessage;
                     ratesCardEl.innerHTML = noDataMessage;
                     buyCardEl.innerHTML = noDataMessage;
-                    profitLossCardEl.innerHTML = noDataMessage;
+                    profitLossCardEl.innerHTML = noSheetIdMessage;
                 }
             })
             .catch(error => {

@@ -23,7 +23,7 @@
             height: 100vh; /* Ensure body takes full viewport height */
             display: flex;
             flex-direction: column;
-            background-color: #121212; /* Very dark background for the body */
+            background-color: #5C5CFF; /* Purple background from image */
             color: #E5E7EB; /* Light gray text for general content */
         }
 
@@ -38,7 +38,7 @@
             overflow-y: auto; /* Enable vertical scrolling within each slide */
             -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS devices */
             padding-bottom: 100px; /* Add some padding to the bottom of each slide content to clear bottom nav */
-            background-color: #121212; /* Very dark background for slides */
+            background-color: transparent; /* Transparent for slides to show body background */
         }
 
         /* Hide scrollbar for Webkit browsers (Chrome, Safari) */
@@ -784,6 +784,83 @@
         /* Ensure .hidden truly hides elements */
         .hidden {
             display: none !important;
+        }
+
+        /* Custom styles for Login/Registration page */
+        .login-card {
+            background-color: #FFFFFF; /* White background for login card */
+            border-radius: 1rem; /* Rounded corners */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Soft shadow */
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+            color: #1F2937; /* Dark text for light background */
+        }
+
+        .login-toggle-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #E5E7EB; /* Light border at the bottom */
+        }
+
+        .login-toggle-button {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: color 0.3s ease, border-color 0.3s ease;
+            color: #6B7280; /* Gray text for inactive */
+            border-bottom: 2px solid transparent; /* Transparent border for inactive */
+            font-size: 1.125rem; /* text-lg */
+        }
+
+        .login-toggle-button.active-login-tab {
+            color: #5C5CFF; /* Purple for active tab */
+            border-color: #5C5CFF; /* Purple underline for active tab */
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #D1D5DB; /* Light gray border */
+            border-radius: 0.5rem; /* More rounded */
+            background-color: #F9FAFB; /* Very light background */
+            color: #1F2937; /* Dark text */
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .login-input::placeholder {
+            color: #9CA3AF; /* Placeholder color */
+        }
+        .login-input:focus {
+            outline: none;
+            border-color: #5C5CFF; /* Purple focus border */
+            box-shadow: 0 0 0 3px rgba(92, 92, 255, 0.3); /* Purple ring on focus */
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem; /* More rounded buttons */
+            font-weight: 700; /* font-bold */
+            color: white;
+            background: linear-gradient(to right, #60A5FA, #5C5CFF); /* Blue to purple gradient */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .login-button:hover {
+            background: linear-gradient(to right, #3B82F6, #4A4AF0); /* Darker gradient on hover */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-version {
+            color: #9CA3AF; /* Gray-400 */
+            font-size: 0.875rem; /* text-sm */
+            margin-top: 1.5rem;
         }
     </style>
     <script type="module">
@@ -1950,12 +2027,25 @@
             const sheetIdInput = document.getElementById('sheetIdInput');
             const saveSheetIdButton = document.getElementById('saveSheetIdButton');
             const displayUserId = document.getElementById('displayUserId');
-            // New email/password input fields and buttons
-            const emailInput = document.getElementById('emailInput');
-            const passwordInput = document.getElementById('passwordInput');
-            const signInEmailPasswordButton = document.getElementById('signInEmailPasswordButton');
-            const signUpEmailPasswordButton = document.getElementById('signUpEmailPasswordButton');
-            const signOutButton = document.getElementById('signOutButton');
+            const signOutButtonSettings = document.getElementById('signOutButtonSettings'); // New sign out button in settings
+
+
+            // New email/password input fields and buttons (on login page)
+            const loginEmailInput = document.getElementById('loginEmailInput');
+            const loginPasswordInput = document.getElementById('loginPasswordInput');
+            const signInButton = document.getElementById('signInButton');
+            const signUpButton = document.getElementById('signUpButton');
+            const loginAuthSection = document.getElementById('loginAuthSection');
+            const loginToggleSignIn = document.getElementById('loginToggleSignIn');
+            const loginToggleSignUp = document.getElementById('loginToggleSignUp');
+            const loginFormContainer = document.getElementById('loginFormContainer');
+            const signUpFormContainer = document.getElementById('signUpFormContainer');
+            const signUpEmailInput = document.getElementById('signUpEmailInput');
+            const signUpPasswordInput = document.getElementById('signUpPasswordInput');
+            const signUpConfirmPasswordInput = document.getElementById('signUpConfirmPasswordInput');
+            const signUpSubmitButton = document.getElementById('signUpSubmitButton');
+            const loginSignOutButton = document.getElementById('loginSignOutButton');
+
 
             // Theme toggle elements
             const themeToggle = document.getElementById('themeToggle');
@@ -1965,7 +2055,7 @@
 
             // Initialize Swiper for tab navigation
             swiperInstance = new Swiper(".mySwiper", { // Assign to global swiperInstance
-                initialSlide: 0, // Start on the summary tab
+                initialSlide: 0, // Start on the login/registration tab
                 effect: "slide", // Slide transition effect
                 speed: 300, // Transition speed
                 allowTouchMove: true, // Allow swiping by default
@@ -1975,10 +2065,16 @@
                     // Update bottom navigation when slide changes
                     slideChange: function() {
                         updateNavigation(this.activeIndex);
+                        // Hide bottom nav on login page
+                        if (this.activeIndex === 0) {
+                            document.querySelector('.bottom-nav').classList.add('hidden');
+                        } else {
+                            document.querySelector('.bottom-nav').classList.remove('hidden');
+                        }
                     },
                     // Load data specific to the tab after slide transition ends
                     slideChangeTransitionEnd: function() {
-                        if (this.activeIndex === 0) { // Summary tab
+                        if (this.activeIndex === 1) { // Summary tab (now index 1)
                             // Only fetch summary if sheetId is present
                             if (window.userSheetId) {
                                 fetchSummary();
@@ -1990,7 +2086,7 @@
                                 buyCardEl.innerHTML = noSheetIdMessage;
                                 profitLossCardEl.innerHTML = noSheetIdMessage;
                             }
-                        } else if (this.activeIndex === 1) { // Record tab (Buy/Sell)
+                        } else if (this.activeIndex === 2) { // Record tab (now index 2)
                             // Set the current date when the Record tab becomes active
                             const today = new Date();
                             const formattedDate = today.toISOString().split('T')[0];
@@ -2004,7 +2100,7 @@
                                 dateSellInput.value = formattedDate;
                                 calculateTHBForSale();
                             }
-                        } else if (this.activeIndex === 2) { // History tab
+                        } else if (this.activeIndex === 3) { // History tab (now index 3)
                             fetchHistory();
                         }
                     }
@@ -2014,8 +2110,10 @@
 
             // Function to update the active state of bottom navigation items and indicators
             function updateNavigation(index) {
+                // Adjust index for bottom nav as login page is not part of bottom nav
+                const navIndex = index - 1; // If current index is 0 (login), navIndex is -1. If 1 (summary), navIndex is 0.
                 navItems.forEach((item, i) => {
-                    if (i === index) {
+                    if (i === navIndex) {
                         item.classList.add('active'); // Add active class
                     } else {
                         item.classList.remove('active'); // Remove active class
@@ -2024,7 +2122,7 @@
 
 
                 indicators.forEach((indicator, i) => {
-                    if (i === index) {
+                    if (i === navIndex) {
                         indicator.classList.add('active'); // Add active class
                     } else {
                         indicator.classList.remove('active'); // Remove active class
@@ -2036,6 +2134,7 @@
             // Add click listeners to bottom navigation items to change slides
             navItems.forEach(item => {
                 item.addEventListener('click', function() {
+                    // Adjust index to account for the new login slide
                     const index = parseInt(this.getAttribute('data-index')); // Get index from data-index attribute
                     if (swiperInstance) { // Use swiperInstance
                         swiperInstance.slideTo(index); // Navigate to the specified slide
@@ -2153,7 +2252,7 @@
                         // Navigate to summary tab after successful save
                         setTimeout(() => {
                             if (swiperInstance) { // Use swiperInstance
-                                swiperInstance.slideTo(0); // Go to summary tab
+                                swiperInstance.slideTo(1); // Go to summary tab (now index 1)
                             }
                             fetchSummary(); // Reload summary data
                         }, 1000);
@@ -2217,7 +2316,7 @@
                         thbReceiveResultElement.textContent = '0.00 ฿';
                         setTimeout(() => {
                             if (swiperInstance) {
-                                swiperInstance.slideTo(0); // Go to summary tab
+                                swiperInstance.slideTo(1); // Go to summary tab (now index 1)
                             }
                             fetchSummary(); // Reload summary data
                         }, 1000);
@@ -2356,6 +2455,10 @@
                         showNotification(successNotification, 'บันทึก Google Sheet ID สำเร็จ');
                         // Reload summary data with the new sheet ID
                         fetchSummary();
+                        // If user just saved sheet ID, navigate to summary
+                        if (swiperInstance) {
+                            swiperInstance.slideTo(1); // Go to summary tab (now index 1)
+                        }
                     } else {
                         showNotification(errorNotification, 'ไม่สามารถบันทึก Google Sheet ID ได้');
                     }
@@ -2364,27 +2467,55 @@
                 }
             });
 
-            // Event listeners for new sign-in/sign-up buttons
-            if (signInEmailPasswordButton) {
-                signInEmailPasswordButton.addEventListener('click', () => {
-                    const email = emailInput.value;
-                    const password = passwordInput.value;
-                    handleSignInWithEmailPassword(email, password); // Call the renamed function
+            // Event listeners for login/signup buttons on the login page
+            if (signInButton) {
+                signInButton.addEventListener('click', () => {
+                    const email = loginEmailInput.value;
+                    const password = loginPasswordInput.value;
+                    handleSignInWithEmailPassword(email, password);
                 });
             }
-            if (signUpEmailPasswordButton) {
-                signUpEmailPasswordButton.addEventListener('click', () => {
-                    const email = emailInput.value;
-                    const password = passwordInput.value;
+
+            if (signUpSubmitButton) { // Changed from signUpEmailPasswordButton
+                signUpSubmitButton.addEventListener('click', () => {
+                    const email = signUpEmailInput.value;
+                    const password = signUpPasswordInput.value;
+                    const confirmPassword = signUpConfirmPasswordInput.value;
+
+                    if (password !== confirmPassword) {
+                        showNotification(errorNotification, 'รหัสผ่านไม่ตรงกัน');
+                        return;
+                    }
                     signUpWithEmailPassword(email, password);
                 });
             }
-            if (signOutButton) {
-                signOutButton.addEventListener('click', signOutUser);
+
+            if (loginSignOutButton) { // Renamed from signOutButton
+                loginSignOutButton.addEventListener('click', signOutUser);
             }
 
-            // Initial calls are now managed by the onAuthStateChanged listener
-            // fetchSummary() will be called once Firebase authentication is complete and userSheetId is fetched.
+            // Sign out button in settings
+            if (signOutButtonSettings) {
+                signOutButtonSettings.addEventListener('click', signOutUser);
+            }
+
+            // Login/Sign-up form toggle logic
+            loginToggleSignIn.addEventListener('click', () => {
+                loginToggleSignIn.classList.add('active-login-tab');
+                loginToggleSignUp.classList.remove('active-login-tab');
+                loginFormContainer.classList.remove('hidden');
+                signUpFormContainer.classList.add('hidden');
+            });
+
+            loginToggleSignUp.addEventListener('click', () => {
+                loginToggleSignUp.classList.add('active-login-tab');
+                loginToggleSignIn.classList.remove('active-login-tab');
+                signUpFormContainer.classList.remove('hidden');
+                loginFormContainer.classList.add('hidden');
+            });
+
+            // Set initial login form view (default to sign-in)
+            loginToggleSignIn.click();
         }
 
         let isAppInitialized = false; // New flag to ensure initializeAppComponent runs only once
@@ -2463,9 +2594,7 @@
             // Listen for auth state changes to get userId and fetch user's sheet ID
             onAuthStateChanged(window.auth, async (user) => {
                 const displayUserIdElement = document.getElementById('displayUserId');
-                const authSection = document.getElementById('authSection'); // The div containing email/password inputs and buttons
-                const emailInput = document.getElementById('emailInput');
-                const passwordInput = document.getElementById('passwordInput');
+                const loginAuthSection = document.getElementById('loginAuthSection'); // The div containing email/password inputs and buttons on the login page
 
                 if (user) {
                     window.userId = user.uid;
@@ -2473,17 +2602,16 @@
                     if (displayUserIdElement) {
                         displayUserIdElement.textContent = window.userId;
                     }
-                    if (authSection) {
-                        // Hide email/password inputs and show sign-out button
-                        authSection.innerHTML = `
-                            <h3 class="font-medium text-gray-100 mb-2">การเข้าสู่ระบบ</h3>
-                            <button id="signOutButton" class="w-full form-button bg-red-500 hover:bg-red-600">
+                    if (loginAuthSection) {
+                        // If logged in, show sign-out button on the login page
+                        loginAuthSection.innerHTML = `
+                            <h3 class="font-medium text-gray-800 mb-2">สถานะการเข้าสู่ระบบ</h3>
+                            <p class="text-gray-600 mb-4 break-all">เข้าสู่ระบบในชื่อ: <span class="font-semibold">${user.email || 'ผู้ใช้ไม่ระบุ'}</span></p>
+                            <button id="loginSignOutButton" class="w-full login-button bg-red-500 hover:bg-red-600">
                                 ออกจากระบบ
                             </button>
-                            <p class="text-xs text-gray-500 mt-1">เข้าสู่ระบบเพื่อบันทึกข้อมูลของคุณ</p>
                         `;
-                        // Re-attach event listener for signOutButton after re-rendering
-                        document.getElementById('signOutButton').addEventListener('click', signOutUser);
+                        document.getElementById('loginSignOutButton').addEventListener('click', signOutUser);
                     }
 
                     await fetchUserSheetId(); // Fetch user's sheet ID
@@ -2491,11 +2619,16 @@
                     // After fetching sheet ID, decide what to do
                     if (window.userSheetId) {
                         fetchSummary(); // Load summary data immediately if sheet ID exists
+                        if (swiperInstance) {
+                            swiperInstance.slideTo(1); // Go to summary tab (now index 1)
+                            document.querySelector('.bottom-nav').classList.remove('hidden'); // Show bottom nav
+                        }
                     } else {
                         // Show notification and navigate to settings if no sheet ID
                         showNotification(document.getElementById('errorNotification'), 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
                         if (swiperInstance) {
-                            swiperInstance.slideTo(3); // Navigate to settings tab (assuming index 3)
+                            swiperInstance.slideTo(4); // Navigate to settings tab (now index 4)
+                            document.querySelector('.bottom-nav').classList.remove('hidden'); // Show bottom nav
                         }
                     }
                 } else {
@@ -2505,39 +2638,81 @@
                     if (displayUserIdElement) {
                         displayUserIdElement.textContent = 'N/A (ไม่ได้เข้าสู่ระบบ)';
                     }
-                    if (authSection) {
-                        // Show email/password inputs and sign-in/sign-up buttons
-                        authSection.innerHTML = `
-                            <h3 class="font-medium text-gray-100 mb-2">การเข้าสู่ระบบ</h3>
-                            <div class="mb-2">
-                                <label for="emailInput" class="block text-sm font-medium text-gray-400 mb-1">อีเมล</label>
-                                <input type="email" id="emailInput" placeholder="your@example.com"
-                                    class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#121212] text-gray-100">
+                    if (loginAuthSection) {
+                        // If not logged in, show login/signup forms on the login page
+                        loginAuthSection.innerHTML = `
+                            <div class="login-toggle-container">
+                                <button id="loginToggleSignIn" class="login-toggle-button active-login-tab">เข้าสู่ระบบ</button>
+                                <button id="loginToggleSignUp" class="login-toggle-button">ลงทะเบียน</button>
                             </div>
-                            <div class="mb-4">
-                                <label for="passwordInput" class="block text-sm font-medium text-gray-400 mb-1">รหัสผ่าน</label>
-                                <input type="password" id="passwordInput" placeholder="********"
-                                    class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#121212] text-gray-100">
+
+                            <div id="loginFormContainer" class="space-y-4">
+                                <div>
+                                    <label for="loginEmailInput" class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                                    <input type="email" id="loginEmailInput" placeholder="กรอก อีเมล ของ คุณ"
+                                        class="login-input">
+                                </div>
+                                <div>
+                                    <label for="loginPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+                                    <input type="password" id="loginPasswordInput" placeholder="กรอก รหัส ผ่าน ของ คุณ"
+                                        class="login-input">
+                                </div>
+                                <button id="signInButton" class="login-button">
+                                    เข้าสู่ระบบ
+                                </button>
                             </div>
-                            <button id="signInEmailPasswordButton" class="w-full form-button mb-2">
-                                เข้าสู่ระบบ
-                            </button>
-                            <button id="signUpEmailPasswordButton" class="w-full form-button bg-gray-600 hover:bg-gray-700">
-                                ลงทะเบียน
-                            </button>
-                                <p class="text-xs text-gray-500 mt-1">เข้าสู่ระบบเพื่อบันทึกข้อมูลของคุณ</p>
+
+                            <div id="signUpFormContainer" class="space-y-4 hidden">
+                                <div>
+                                    <label for="signUpEmailInput" class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                                    <input type="email" id="signUpEmailInput" placeholder="กรอก อีเมล ของ คุณ"
+                                        class="login-input">
+                                </div>
+                                <div>
+                                    <label for="signUpPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+                                    <input type="password" id="signUpPasswordInput" placeholder="กรอก รหัส ผ่าน ของ คุณ"
+                                        class="login-input">
+                                </div>
+                                <div>
+                                    <label for="signUpConfirmPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">ยืนยันรหัสผ่าน</label>
+                                    <input type="password" id="signUpConfirmPasswordInput" placeholder="ยืนยัน รหัส ผ่าน ของ คุณ"
+                                        class="login-input">
+                                </div>
+                                <button id="signUpSubmitButton" class="login-button">
+                                    ลงทะเบียน
+                                </button>
+                            </div>
                         `;
-                        // Re-attach event listeners for newly created buttons
-                        document.getElementById('signInEmailPasswordButton').addEventListener('click', () => {
-                            const email = document.getElementById('emailInput').value;
-                            const password = document.getElementById('passwordInput').value;
-                            handleSignInWithEmailPassword(email, password); // Call the renamed function
+                        // Re-attach event listeners for newly created buttons and toggles
+                        document.getElementById('loginToggleSignIn').addEventListener('click', () => {
+                            document.getElementById('loginToggleSignIn').classList.add('active-login-tab');
+                            document.getElementById('loginToggleSignUp').classList.remove('active-login-tab');
+                            document.getElementById('loginFormContainer').classList.remove('hidden');
+                            document.getElementById('signUpFormContainer').classList.add('hidden');
                         });
-                        document.getElementById('signUpEmailPasswordButton').addEventListener('click', () => {
-                            const email = document.getElementById('emailInput').value;
-                            const password = document.getElementById('passwordInput').value;
+                        document.getElementById('loginToggleSignUp').addEventListener('click', () => {
+                            document.getElementById('loginToggleSignUp').classList.add('active-login-tab');
+                            document.getElementById('loginToggleSignIn').classList.remove('active-login-tab');
+                            document.getElementById('signUpFormContainer').classList.remove('hidden');
+                            document.getElementById('loginFormContainer').classList.add('hidden');
+                        });
+                        document.getElementById('signInButton').addEventListener('click', () => {
+                            const email = document.getElementById('loginEmailInput').value;
+                            const password = document.getElementById('loginPasswordInput').value;
+                            handleSignInWithEmailPassword(email, password);
+                        });
+                        document.getElementById('signUpSubmitButton').addEventListener('click', () => {
+                            const email = document.getElementById('signUpEmailInput').value;
+                            const password = document.getElementById('signUpPasswordInput').value;
+                            const confirmPassword = document.getElementById('signUpConfirmPasswordInput').value;
+                            if (password !== confirmPassword) {
+                                showNotification(errorNotification, 'รหัสผ่านไม่ตรงกัน');
+                                return;
+                            }
                             signUpWithEmailPassword(email, password);
                         });
+                        // Set default to sign-in form
+                        document.getElementById('loginToggleSignIn').click();
                     }
 
                     // Clear summary and history if no user is logged in
@@ -2550,7 +2725,8 @@
 
                     showNotification(document.getElementById('errorNotification'), 'โปรดเข้าสู่ระบบเพื่อใช้งาน');
                     if (swiperInstance) {
-                        swiperInstance.slideTo(3); // Navigate to settings tab
+                        swiperInstance.slideTo(0); // Stay on login tab
+                        document.querySelector('.bottom-nav').classList.add('hidden'); // Hide bottom nav
                     }
                 }
                 // Initialize app components only once, after the initial auth state is determined
@@ -2566,6 +2742,59 @@
     <div class="swiper mySwiper">
         <div class="swiper-wrapper">
             <div class="swiper-slide">
+                <div class="container flex flex-col items-center justify-center h-full">
+                    <h2 class="text-3xl font-bold text-white mb-8">ยินดีต้อนรับ</h2>
+
+                    <div class="login-card">
+                        <div id="loginAuthSection" class="space-y-4">
+                            <div class="login-toggle-container">
+                                <button id="loginToggleSignIn" class="login-toggle-button active-login-tab">เข้าสู่ระบบ</button>
+                                <button id="loginToggleSignUp" class="login-toggle-button">ลงทะเบียน</button>
+                            </div>
+
+                            <div id="loginFormContainer" class="space-y-4">
+                                <div>
+                                    <label for="loginEmailInput" class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                                    <input type="email" id="loginEmailInput" placeholder="กรอก อีเมล ของ คุณ"
+                                        class="login-input">
+                                </div>
+                                <div>
+                                    <label for="loginPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+                                    <input type="password" id="loginPasswordInput" placeholder="กรอก รหัส ผ่าน ของ คุณ"
+                                        class="login-input">
+                                </div>
+                                <button id="signInButton" class="login-button">
+                                    เข้าสู่ระบบ
+                                </button>
+                            </div>
+
+                            <div id="signUpFormContainer" class="space-y-4 hidden">
+                                <div>
+                                    <label for="signUpEmailInput" class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                                    <input type="email" id="signUpEmailInput" placeholder="กรอก อีเมล ของ คุณ"
+                                        class="login-input">
+                                </div>
+                                <div>
+                                    <label for="signUpPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+                                    <input type="password" id="signUpPasswordInput" placeholder="กรอก รหัส ผ่าน ของ คุณ"
+                                        class="login-input">
+                                </div>
+                                <div>
+                                    <label for="signUpConfirmPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">ยืนยันรหัสผ่าน</label>
+                                    <input type="password" id="signUpConfirmPasswordInput" placeholder="ยืนยัน รหัส ผ่าน ของ คุณ"
+                                        class="login-input">
+                                </div>
+                                <button id="signUpSubmitButton" class="login-button">
+                                    ลงทะเบียน
+                                </button>
+                            </div>
+                        </div>
+                        <p class="login-version text-center">V 1.0.4</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="swiper-slide bg-[#121212]">
                 <div class="container">
                     <div class="flex justify-between items-center mb-6 py-2">
                         <h2 class="text-xl sm:text-2xl font-bold text-gray-100">สรุปข้อมูล</h2>
@@ -2631,7 +2860,7 @@
             </div>
 
 
-            <div class="swiper-slide">
+            <div class="swiper-slide bg-[#121212]">
                 <div class="container">
                     <h2 class="text-xl sm:text-2xl font-bold text-gray-100 mb-6 text-center">บันทึกธุรกรรม USD</h2>
 
@@ -2731,7 +2960,7 @@
                     </div>
                 </div>
             </div>
-            <div class="swiper-slide">
+            <div class="swiper-slide bg-[#121212]">
                 <div class="container">
                     <div class="bg-[#2C2C2E] rounded-lg shadow-lg p-6 flex flex-col h-full">
                         <div class="flex justify-between items-center mb-4">
@@ -2753,7 +2982,7 @@
             </div>
 
 
-            <div class="swiper-slide">
+            <div class="swiper-slide bg-[#121212]">
                 <div class="container">
                     <div class="bg-[#2C2C2E] rounded-lg shadow-lg p-6">
                         <h2 class="text-xl sm:text-2xl font-semibold text-gray-100 mb-6">ตั้งค่า</h2>
@@ -2779,31 +3008,6 @@
                                 </div>
                                 <p class="text-xs text-gray-500 mt-1">ใช้สำหรับแยกข้อมูลผู้ใช้</p>
                             </div>
-
-                            <div id="authSection" class="p-4 border border-gray-700 rounded-md">
-                                <h3 class="font-medium text-gray-100 mb-2">การเข้าสู่ระบบ</h3>
-                                <div class="mb-2">
-                                    <label for="emailInput" class="block text-sm font-medium text-gray-400 mb-1">อีเมล</label>
-                                    <input type="email" id="emailInput" placeholder="your@example.com"
-                                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#121212] text-gray-100">
-                                </div>
-                                <div class="mb-4">
-                                    <label for="passwordInput" class="block text-sm font-medium text-gray-400 mb-1">รหัสผ่าน</label>
-                                    <input type="password" id="passwordInput" placeholder="********"
-                                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#121212] text-gray-100">
-                                </div>
-                                <button id="signInEmailPasswordButton" class="w-full form-button mb-2">
-                                    เข้าสู่ระบบ
-                                </button>
-                                <button id="signUpEmailPasswordButton" class="w-full form-button bg-gray-600 hover:bg-gray-700">
-                                    ลงทะเบียน
-                                </button>
-                                <button id="signOutButton" class="w-full form-button bg-red-500 hover:bg-red-600 hidden">
-                                    ออกจากระบบ
-                                </button>
-                                <p class="text-xs text-gray-500 mt-1">เข้าสู่ระบบเพื่อบันทึกข้อมูลของคุณ</p>
-                            </div>
-
 
                             <div class="p-4 border border-gray-700 rounded-md">
                                 <div class="flex justify-between items-center">
@@ -2842,8 +3046,14 @@
                             <div class="p-4 border border-gray-700 rounded-md">
                                 <div class="flex justify-between items-center">
                                     <span class="font-medium text-gray-100">เวอร์ชัน</span>
-                                    <span class="text-gray-400">1.0.3</span>
+                                    <span class="text-gray-400">1.0.4</span>
                                 </div>
+                            </div>
+
+                            <div class="p-4 border border-gray-700 rounded-md">
+                                <button id="signOutButtonSettings" class="w-full form-button bg-red-500 hover:bg-red-600">
+                                    ออกจากระบบ
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -2853,23 +3063,22 @@
     </div>
 
 
-    <div class="bottom-nav">
-        <div class="grid grid-cols-4 gap-2">
-            <div class="nav-item active" data-index="0"> <div class="emoji">📈</div>
+    <div class="bottom-nav hidden"> <div class="grid grid-cols-4 gap-2">
+            <div class="nav-item" data-index="1"> <div class="emoji">📈</div>
                 <div class="label">สรุป</div>
             </div>
-            <div class="nav-item" data-index="1"> <div class="emoji">📝</div>
+            <div class="nav-item" data-index="2"> <div class="emoji">📝</div>
                 <div class="label">บันทึก</div>
             </div>
-            <div class="nav-item" data-index="2"> <div class="emoji">📚</div>
+            <div class="nav-item" data-index="3"> <div class="emoji">📚</div>
                 <div class="label">ประวัติ</div>
             </div>
-            <div class="nav-item" data-index="3"> <div class="emoji">⚙️</div>
+            <div class="nav-item" data-index="4"> <div class="emoji">⚙️</div>
                 <div class="label">ตั้งค่า</div>
             </div>
         </div>
         <div class="page-indicator">
-            <div class="indicator active"></div>
+            <div class="indicator"></div>
             <div class="indicator"></div>
             <div class="indicator"></div>
             <div class="indicator"></div>

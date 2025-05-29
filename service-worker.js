@@ -1,5 +1,5 @@
 // กำหนดชื่อแคชและเวอร์ชัน
-const CACHE_NAME = 'usd-tracker-app-v1.0.6'; // อัปเดตเวอร์ชันเมื่อมีการเปลี่ยนแปลงไฟล์
+const CACHE_NAME = 'usd-tracker-app-v1.0.7'; // อัปเดตเวอร์ชันเมื่อมีการเปลี่ยนแปลงไฟล์
 const ASSETS = [
     '/',
     '/index.html',

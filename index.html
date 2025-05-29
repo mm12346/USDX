@@ -2575,9 +2575,9 @@
             }
 
             // Service Worker Registration (Commented out due to protocol error in Canvas environment)
-            /*
+            
             if ('serviceWorker' in navigator) {
-                const serviceWorkerUrl = '/service-worker.js';
+                const serviceWorkerUrl = 'service-worker.js';
                 console.log('Attempting to register Service Worker at:', serviceWorkerUrl);
                 navigator.serviceWorker.register(serviceWorkerUrl)
                     .then(reg => {
@@ -2634,7 +2634,7 @@
                     }, 300);
                 });
             }
-            */
+            
 
             // Listen for auth state changes to get userId and fetch user's sheet ID
             onAuthStateChanged(window.auth, async (user) => {

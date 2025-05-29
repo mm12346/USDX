@@ -2559,6 +2559,48 @@
                 updateNotification.classList.add('translate-y-full');
             }
 
+            // Service Worker Registration
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/service-worker.js')
+                        .then(registration => {
+                            console.log('Service Worker registered:', registration);
+
+                            // Check for Service Worker updates
+                            registration.addEventListener('updatefound', () => {
+                                const newWorker = registration.installing;
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        // A new Service Worker is installed and waiting to activate
+                                        // Show update notification
+                                        const updateNotification = document.getElementById('updateNotification');
+                                        if (updateNotification) {
+                                            updateNotification.classList.remove('hidden');
+                                            updateNotification.classList.remove('translate-y-full');
+                                            updateNotification.classList.add('translate-y-0');
+                                        }
+                                    }
+                                });
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Service Worker registration failed:', error);
+                        });
+                });
+
+                // Listen for messages from the Service Worker (for update notification)
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    if (event.data && event.data.type === 'UPDATE_AVAILABLE') {
+                        const updateNotification = document.getElementById('updateNotification');
+                        if (updateNotification) {
+                            updateNotification.classList.remove('hidden');
+                            updateNotification.classList.remove('translate-y-full');
+                            updateNotification.classList.add('translate-y-0');
+                        }
+                    }
+                });
+            }
+
             // Listen for auth state changes to get userId and fetch user's sheet ID
             onAuthStateChanged(window.auth, async (user) => {
                 const displayUserIdElement = document.getElementById('displayUserId');
@@ -2922,7 +2964,9 @@
 
     <div id="updateNotification" class="hidden fixed bottom-24 left-1/2 transform -translate-x-1/2 translate-y-full bg-[#2C2C2E] text-white px-6 py-3 rounded-md shadow-lg z-50">
         <p class="text-center">มีการอัปเดตใหม่! กรุณารีเฟรชเพื่อใช้งานเวอร์ชันล่าสุด</p>
-        </div>
+        <button onclick="window.location.reload(true)" class="ml-4 px-4 py-2 bg-blue-500 rounded-md">รีเฟรช</button>
+        <button class="close-button" onclick="document.getElementById('updateNotification').classList.add('hidden');">&times;</button>
+    </div>
 
 
     <div id="customModalOverlay" class="custom-modal-overlay hidden">

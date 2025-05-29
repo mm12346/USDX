@@ -1,94 +1,103 @@
-// กำหนดชื่อแคชและเวอร์ชัน
-const CACHE_NAME = 'usdx-cache-v1.0.1'; // เปลี่ยนเวอร์ชันเมื่อมีการอัปเดตไฟล์
+const CACHE_NAME = 'usd-tracker-cache-v1'; // เปลี่ยนเวอร์ชัน cache เมื่อมีการอัปเดตเนื้อหา
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  'https://cdn.tailwindcss.com',
-  'https://unpkg.com/swiper/swiper-bundle.min.css',
-  'https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap',
-  'https://unpkg.com/swiper/swiper-bundle.min.js',
-  'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',
-  'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js',
-  'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js',
-  'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js',
-  // เพิ่มเส้นทางไอคอนของคุณที่นี่ (ตัวอย่าง)
-  '/icons/icon-48x48.png',
-  '/icons/icon-72x72.png',
-  '/icons/icon-96x96.png',
-  '/icons/icon-144x144.png',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+    '/',
+    '/index.html',
+    '/manifest.json',
+    '/icons/icon-48x48.png',
+    '/icons/icon-72x72.png',
+    '/icons/icon-96x96.png',
+    '/icons/icon-144x144.png',
+    '/icons/icon-192x192.png',
+    '/icons/icon-512x512.png',
+    '/icons/apple-touch-icon.png', // ตรวจสอบว่ามีไฟล์นี้อยู่จริง
+    // เพิ่ม assets อื่นๆ เช่น CSS, JS libraries ที่คุณใช้
+    'https://cdn.tailwindcss.com',
+    'https://unpkg.com/swiper/swiper-bundle.min.css',
+    'https://unpkg.com/swiper/swiper-bundle.min.js',
+    'https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap',
+    'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js',
+    'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js',
+    'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js',
+    'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js'
 ];
 
-// ติดตั้ง Service Worker และแคชไฟล์ทั้งหมด
-self.addEventListener('install', event => {
-  console.log('Service Worker: กำลังติดตั้งและแคชไฟล์...');
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Service Worker: เปิดแคชแล้ว');
-        return cache.addAll(urlsToCache);
-      })
-      .then(() => self.skipWaiting()) // บังคับให้ Service Worker ใหม่ทำงานทันที
-      .catch(err => console.error('Service Worker: การแคชล้มเหลว', err))
-  );
+self.addEventListener('install', (event) => {
+    console.log('Service Worker: Installing...');
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then((cache) => {
+                console.log('Service Worker: Opened cache');
+                return cache.addAll(urlsToCache);
+            })
+            .catch(error => {
+                console.error('Service Worker: Cache addAll failed', error);
+            })
+    );
+    self.skipWaiting(); // ให้ Service Worker ใหม่เริ่มทำงานทันทีหลังจากติดตั้ง
 });
 
-// เปิดใช้งาน Service Worker และล้างแคชเก่า
-self.addEventListener('activate', event => {
-  console.log('Service Worker: กำลังเปิดใช้งานและล้างแคชเก่า...');
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Service Worker: ลบแคชเก่า:', cacheName);
-            return caches.delete(cacheName);
-          }
-          return Promise.resolve();
+self.addEventListener('activate', (event) => {
+    console.log('Service Worker: Activating...');
+    const cacheWhitelist = [CACHE_NAME];
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheWhitelist.indexOf(cacheName) === -1) {
+                        console.log('Service Worker: Deleting old cache', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
         })
-      );
-    }).then(() => self.clients.claim()) // บังคับให้ Service Worker ควบคุมหน้าเว็บทันที
-  );
+    );
+    self.clients.claim(); // ควบคุมหน้าเว็บทันที
 });
 
-// ดักจับคำขอ Fetch และให้บริการจากแคชหรือเครือข่าย
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // หากพบในแคช ให้ส่งคืนจากแคช
-        if (response) {
-          return response;
-        }
-        // หากไม่พบในแคช ให้ไปดึงจากเครือข่าย
-        return fetch(event.request)
-          .then(fetchResponse => {
-            // ตรวจสอบว่าการตอบสนองถูกต้องหรือไม่
-            if (!fetchResponse || fetchResponse.status !== 200 || fetchResponse.type !== 'basic') {
-              return fetchResponse;
-            }
-            // แคชการตอบสนองใหม่
-            const responseToCache = fetchResponse.clone();
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-            return fetchResponse;
-          })
-          .catch(error => {
-            console.error('Service Worker: การดึงข้อมูลล้มเหลว:', error);
-            // สามารถส่งคืนหน้าออฟไลน์ได้ที่นี่หากต้องการ
-            // return caches.match('/offline.html'); // ตัวอย่าง
-          });
-      })
-  );
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        caches.match(event.request)
+            .then((response) => {
+                // Cache hit - return response
+                if (response) {
+                    return response;
+                }
+                // If not in cache, fetch from network
+                return fetch(event.request).then(
+                    (response) => {
+                        // Check if we received a valid response
+                        if (!response || response.status !== 200 || response.type !== 'basic') {
+                            return response;
+                        }
+                        // IMPORTANT: Clone the response. A response is a stream
+                        // and can only be consumed once. We must clone it so that
+                        // both the cache and the browser can consume it.
+                        const responseToCache = response.clone();
+
+                        caches.open(CACHE_NAME)
+                            .then((cache) => {
+                                cache.put(event.request, responseToCache);
+                            });
+
+                        return response;
+                    }
+                );
+            })
+            .catch(error => {
+                console.error('Service Worker: Fetch failed', error);
+                // คุณอาจต้องการแสดงหน้าออฟไลน์ที่กำหนดเองที่นี่
+                // return caches.match('/offline.html');
+            })
+    );
 });
 
-// ตรวจจับเมื่อมี Service Worker ใหม่พร้อมใช้งาน
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+// Listen for messages from the page to skip waiting
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting(); // สั่งให้ Service Worker ใหม่เริ่มทำงานทันที
+        // ส่งข้อความกลับไปที่หน้าเพื่อบอกให้ reload
+        self.clients.matchAll().then(clients => {
+            clients.forEach(client => client.postMessage({ type: 'RELOAD_APP' }));
+        });
+    }
 });

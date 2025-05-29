@@ -73,6 +73,15 @@
             justify-content: center;
             align-items: center;
             height: 80px; /* Fixed height for the nav bar */
+            opacity: 1; /* Default to visible */
+            pointer-events: auto; /* Allow clicks by default */
+            transition: opacity 0.3s ease-in-out; /* Smooth transition for visibility */
+        }
+
+        /* Class to hide bottom nav smoothly */
+        .bottom-nav.bottom-nav-hidden {
+            opacity: 0;
+            pointer-events: none; /* Disable clicks when hidden */
         }
 
         .bottom-nav .grid {
@@ -458,7 +467,7 @@
             transition: background-color 0.2s ease;
         }
         .delete-button:hover {
-            background-color: rgba(255, 255, 255, 0.2); /* Light overlay on hover */
+            background-color: rgba(255, 255, 255, 0.2);
         }
 
         /* Form button - matching total card active */
@@ -2604,6 +2613,7 @@
             // Listen for auth state changes to get userId and fetch user's sheet ID
             onAuthStateChanged(window.auth, async (user) => {
                 const displayUserIdElement = document.getElementById('displayUserId');
+                const bottomNav = document.querySelector('.bottom-nav'); // Get bottom nav element
 
                 if (user) {
                     // User is signed in
@@ -2624,7 +2634,7 @@
                         swiperInstance.allowSlideNext = true; // Allow swiping next between content tabs
                         swiperInstance.slideTo(0); // Go to summary tab (now index 0)
                     }
-                    document.querySelector('.bottom-nav').classList.remove('hidden'); // Show bottom nav
+                    bottomNav.classList.remove('bottom-nav-hidden'); // Show bottom nav smoothly
 
                     // Then, if sheet ID is missing, show notification.
                     if (!window.userSheetId) {
@@ -2658,7 +2668,7 @@
                         swiperInstance.allowSlidePrev = false;
                         swiperInstance.allowSlideNext = false;
                     }
-                    document.querySelector('.bottom-nav').classList.add('hidden'); // Hide bottom nav
+                    bottomNav.classList.add('bottom-nav-hidden'); // Hide bottom nav smoothly
                     showNotification(document.getElementById('errorNotification'), 'โปรดเข้าสู่ระบบเพื่อใช้งาน');
                 }
                 // Initialize app components only once, after the initial auth state is determined
@@ -2940,7 +2950,7 @@
     </div>
 
 
-    <div class="bottom-nav hidden"> <div class="grid grid-cols-4 gap-2">
+    <div class="bottom-nav bottom-nav-hidden"> <div class="grid grid-cols-4 gap-2">
             <div class="nav-item" data-index="0"> <div class="emoji">📈</div>
                 <div class="label">สรุป</div>
             </div>

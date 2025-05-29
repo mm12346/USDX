@@ -2055,17 +2055,17 @@
 
             // Initialize Swiper for tab navigation
             swiperInstance = new Swiper(".mySwiper", { // Assign to global swiperInstance
-                initialSlide: 0, // Start on the login/registration tab
+                initialSlide: 0, // Default to login tab
                 effect: "slide", // Slide transition effect
                 speed: 300, // Transition speed
-                allowTouchMove: true, // Allow swiping by default
+                allowTouchMove: false, // Initially disable touch move until authenticated
                 resistance: true, // Enable resistance effect
                 resistanceRatio: 0.85, // Resistance ratio
                 on: {
                     // Update bottom navigation when slide changes
                     slideChange: function() {
                         updateNavigation(this.activeIndex);
-                        // Hide bottom nav on login page
+                        // Hide bottom nav on login page (index 0)
                         if (this.activeIndex === 0) {
                             document.querySelector('.bottom-nav').classList.add('hidden');
                         } else {
@@ -2074,20 +2074,19 @@
                     },
                     // Load data specific to the tab after slide transition ends
                     slideChangeTransitionEnd: function() {
-                        if (this.activeIndex === 1) { // Summary tab (now index 1)
-                            // Only fetch summary if sheetId is present
+                        if (this.activeIndex === 1) { // Summary tab
                             if (window.userSheetId) {
                                 fetchSummary();
-                            } else {
-                                // If no sheet ID, clear summary cards and prompt user
-                                const noSheetIdMessage = '<p class="text-red-500 text-center py-4">กรุณาเข้าสู่ระบบและตั้งค่า Google Sheet ID ในหน้าตั้งค่า</p>';
-                                totalCardEl.innerHTML = noSheetIdMessage;
-                                ratesCardEl.innerHTML = noSheetIdMessage;
-                                buyCardEl.innerHTML = noSheetIdMessage;
-                                profitLossCardEl.innerHTML = noSheetIdMessage;
+                            } else if (window.userId) { // If logged in but no sheet ID
+                                showNotification(document.getElementById('errorNotification'), 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
+                            } else { // Not logged in
+                                 const noSheetIdMessage = '<p class="text-gray-500 text-center py-4">โปรดเข้าสู่ระบบเพื่อดูข้อมูล</p>';
+                                 totalCardEl.innerHTML = noSheetIdMessage;
+                                 ratesCardEl.innerHTML = noSheetIdMessage;
+                                 buyCardEl.innerHTML = noSheetIdMessage;
+                                 profitLossCardEl.innerHTML = noSheetIdMessage;
                             }
-                        } else if (this.activeIndex === 2) { // Record tab (now index 2)
-                            // Set the current date when the Record tab becomes active
+                        } else if (this.activeIndex === 2) { // Record tab
                             const today = new Date();
                             const formattedDate = today.toISOString().split('T')[0];
                             const dateInput = document.getElementById('date');
@@ -2100,9 +2099,50 @@
                                 dateSellInput.value = formattedDate;
                                 calculateTHBForSale();
                             }
-                        } else if (this.activeIndex === 3) { // History tab (now index 3)
+                        } else if (this.activeIndex === 3) { // History tab
                             fetchHistory();
                         }
+                    },
+                    // Prevent swiping from login page to other pages if not logged in
+                    // and prevent swiping back to login page if logged in.
+                    // This is handled more robustly by `allowTouchMove` and `onAuthStateChanged`
+                    // but adding a safety check here for explicit user swipes.
+                    touchStart: function(swiper, event) {
+                        // If logged in and on Summary tab (index 1), disable swiping back (allowSlidePrev)
+                        if (window.userId && swiper.activeIndex === 1) {
+                            swiper.allowSlidePrev = false;
+                        } else {
+                            // Otherwise, allow swiping previous for other content tabs
+                            swiper.allowSlidePrev = true;
+                        }
+                        // Always allow swiping next for content tabs if logged in
+                        if (window.userId && swiper.activeIndex < 4) { // Max index is 4 (Settings)
+                            swiper.allowSlideNext = true;
+                        } else {
+                            swiper.allowSlideNext = false; // Disable swiping next if at the last tab
+                        }
+
+                        // If not logged in, prevent all swiping
+                        if (!window.userId) {
+                            swiper.allowTouchMove = false;
+                        }
+                    },
+                    touchEnd: function(swiper, event) {
+                         // Re-evaluate allowTouchMove and allowSlidePrev/Next based on auth state
+                         if (window.userId) {
+                             swiper.allowTouchMove = true; // Allow general touch move for content tabs
+                             // Re-set allowSlidePrev based on activeIndex, specifically for index 1
+                             if (swiper.activeIndex === 1) {
+                                 swiper.allowSlidePrev = false;
+                             } else {
+                                 swiper.allowSlidePrev = true;
+                             }
+                             swiper.allowSlideNext = true;
+                         } else {
+                             swiper.allowTouchMove = false;
+                             swiper.allowSlidePrev = false;
+                             swiper.allowSlideNext = false;
+                         }
                     }
                 }
             });
@@ -2134,10 +2174,15 @@
             // Add click listeners to bottom navigation items to change slides
             navItems.forEach(item => {
                 item.addEventListener('click', function() {
-                    // Adjust index to account for the new login slide
-                    const index = parseInt(this.getAttribute('data-index')); // Get index from data-index attribute
-                    if (swiperInstance) { // Use swiperInstance
-                        swiperInstance.slideTo(index); // Navigate to the specified slide
+                    const targetIndex = parseInt(this.getAttribute('data-index')); // Get index from data-index attribute
+                    if (window.userId) {
+                        // If logged in, allow navigation to any content tab (1, 2, 3, 4)
+                        if (swiperInstance) {
+                            swiperInstance.slideTo(targetIndex);
+                        }
+                    } else {
+                        // If not logged in, prevent navigation and show error
+                        showNotification(errorNotification, 'กรุณาเข้าสู่ระบบก่อน');
                     }
                 });
             });
@@ -2432,7 +2477,7 @@
             setTheme(themeToggle.checked);
 
             themeToggle.addEventListener('change', function() {
-                console.log('Theme toggle:', this.checked ? 'Dark' : 'Light');
+                console.log('Theme toggle:', this.checked ? 'On' : 'Off');
                 setTheme(this.checked);
             });
 
@@ -2530,7 +2575,7 @@
             }
 
             // Service Worker Registration (Commented out due to protocol error in Canvas environment)
-            /*
+            
             if ('serviceWorker' in navigator) {
                 const serviceWorkerUrl = '/service-worker.js';
                 console.log('Attempting to register Service Worker at:', serviceWorkerUrl);
@@ -2589,14 +2634,15 @@
                     }, 300);
                 });
             }
-            */
+        
 
             // Listen for auth state changes to get userId and fetch user's sheet ID
             onAuthStateChanged(window.auth, async (user) => {
                 const displayUserIdElement = document.getElementById('displayUserId');
-                const loginAuthSection = document.getElementById('loginAuthSection'); // The div containing email/password inputs and buttons on the login page
+                const loginAuthSection = document.getElementById('loginAuthSection');
 
                 if (user) {
+                    // User is signed in
                     window.userId = user.uid;
                     console.log("User ID:", window.userId);
                     if (displayUserIdElement) {
@@ -2616,13 +2662,20 @@
 
                     await fetchUserSheetId(); // Fetch user's sheet ID
 
-                    // Always go to summary if logged in
+                    // If logged in, prevent access to login slide (index 0)
                     if (swiperInstance) {
-                        swiperInstance.slideTo(1); // Go to summary tab (index 1)
+                        swiperInstance.allowTouchMove = true; // Allow swiping between content tabs
+                        // When logged in, ensure that swiping back from Summary (index 1) to Login (index 0) is disabled
+                        swiperInstance.allowSlidePrev = (swiperInstance.activeIndex !== 1);
+                        swiperInstance.allowSlideNext = true; // Always allow swiping forward
+
+                        if (swiperInstance.activeIndex === 0) { // If currently on login page, move to summary
+                            swiperInstance.slideTo(1);
+                        }
                         document.querySelector('.bottom-nav').classList.remove('hidden'); // Show bottom nav
                     }
 
-                    // Then, if sheet ID is missing, show notification. The user is already on the summary page.
+                    // Then, if sheet ID is missing, show notification.
                     if (!window.userSheetId) {
                         showNotification(document.getElementById('errorNotification'), 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
                     } else {
@@ -2630,6 +2683,7 @@
                     }
 
                 } else {
+                    // User is signed out
                     window.userId = null;
                     window.userSheetId = null;
                     console.log("No user signed in.");
@@ -2647,12 +2701,12 @@
                             <div id="loginFormContainer" class="space-y-4">
                                 <div>
                                     <label for="loginEmailInput" class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
-                                    <input type="email" id="loginEmailInput" placeholder="กรอก อีเมล ของ คุณ"
+                                    <input type="email" id="loginEmailInput" placeholder="กรอกอีเมล"
                                         class="login-input">
                                 </div>
                                 <div>
                                     <label for="loginPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
-                                    <input type="password" id="loginPasswordInput" placeholder="กรอก รหัส ผ่าน ของ คุณ"
+                                    <input type="password" id="loginPasswordInput" placeholder="กรอกรหัสผ่าน"
                                         class="login-input">
                                 </div>
                                 <button id="signInButton" class="login-button">
@@ -2663,17 +2717,17 @@
                             <div id="signUpFormContainer" class="space-y-4 hidden">
                                 <div>
                                     <label for="signUpEmailInput" class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
-                                    <input type="email" id="signUpEmailInput" placeholder="กรอก อีเมล ของ คุณ"
+                                    <input type="email" id="signUpEmailInput" placeholder="กรอกอีเมล"
                                         class="login-input">
                                 </div>
                                 <div>
                                     <label for="signUpPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
-                                    <input type="password" id="signUpPasswordInput" placeholder="กรอก รหัส ผ่าน ของ คุณ"
+                                    <input type="password" id="signUpPasswordInput" placeholder="กรอกรหัสผ่าน"
                                         class="login-input">
                                 </div>
                                 <div>
                                     <label for="signUpConfirmPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">ยืนยันรหัสผ่าน</label>
-                                    <input type="password" id="signUpConfirmPasswordInput" placeholder="ยืนยัน รหัส ผ่าน ของ คุณ"
+                                    <input type="password" id="signUpConfirmPasswordInput" placeholder="ยืนยันรหัสผ่าน"
                                         class="login-input">
                                 </div>
                                 <button id="signUpSubmitButton" class="login-button">
@@ -2721,11 +2775,14 @@
                     profitLossCardEl.innerHTML = noAuthMessage;
                     historyList.innerHTML = noAuthMessage;
 
-                    showNotification(document.getElementById('errorNotification'), 'โปรดเข้าสู่ระบบเพื่อใช้งาน');
                     if (swiperInstance) {
-                        swiperInstance.slideTo(0); // Stay on login tab
+                        swiperInstance.slideTo(0); // Force to login tab
+                        swiperInstance.allowTouchMove = false; // Disable swiping away from login
+                        swiperInstance.allowSlidePrev = false; // Ensure no swiping prev
+                        swiperInstance.allowSlideNext = false; // Ensure no swiping next
                         document.querySelector('.bottom-nav').classList.add('hidden'); // Hide bottom nav
                     }
+                    showNotification(document.getElementById('errorNotification'), 'โปรดเข้าสู่ระบบเพื่อใช้งาน');
                 }
                 // Initialize app components only once, after the initial auth state is determined
                 if (!isAppInitialized) {
@@ -2787,7 +2844,7 @@
                                 </button>
                             </div>
                         </div>
-                        <p class="login-version text-center">V 1.0.6</p>
+                        <p class="login-version text-center">V 1.0.7</p>
                     </div>
                 </div>
             </div>
@@ -3042,7 +3099,7 @@
                             <div class="p-4 border border-gray-700 rounded-md">
                                 <div class="flex justify-between items-center">
                                     <span class="font-medium text-gray-100">เวอร์ชัน</span>
-                                    <span class="text-gray-400">1.0.6</span>
+                                    <span class="text-gray-400">1.0.7</span>
                                 </div>
                             </div>
 

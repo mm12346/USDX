@@ -8,7 +8,12 @@
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
-    <style>
+
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="USDX"> <link rel="apple-touch-icon" href="/icons/icon-180x180.png">
+    <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png"> <style>
         /* Custom styles for smooth scrolling and fixed bottom nav */
         body {
             font-family: 'Prompt', sans-serif;
@@ -716,6 +721,53 @@
         body.light-theme .custom-modal-actions button.cancel:hover {
             background-color: #4B5563;
         }
+
+        /* PWA Update Notification */
+        #updateNotification {
+            position: fixed;
+            bottom: 90px; /* เหนือ bottom-nav */
+            left: 50%;
+            transform: translateX(-50%) translateY(100%); /* เริ่มต้นซ่อนอยู่ด้านล่าง */
+            background-color: #2C2C2E;
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            z-index: 101; /* สูงกว่า bottom-nav */
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: transform 0.3s ease-out;
+            max-width: 90%;
+        }
+
+        #updateNotification.translate-y-0 {
+            transform: translateX(-50%) translateY(0); /* เลื่อนขึ้นมาแสดง */
+        }
+        #updateNotification button {
+            background-color: #60A5FA;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+        }
+        #updateNotification button:hover {
+            background-color: #3B82F6;
+        }
+        #updateNotification .close-button {
+            background: none;
+            border: none;
+            color: #9CA3AF;
+            font-size: 1.5rem;
+            cursor: pointer;
+            position: absolute;
+            top: 5px;
+            right: 10px;
+        }
+        #updateNotification .close-button:hover {
+            color: white;
+        }
     </style>
     <script type="module">
         // Import Firebase modules
@@ -756,7 +808,7 @@
         // Google Apps Script API URL
         // IMPORTANT: Replace this placeholder URL with your actual deployed Google Apps Script Web App URL.
         // Ensure the Apps Script is deployed as a Web App accessible by "Anyone".
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwj2a_1R9ehhAVGikPFOo5ga1Rg0d2hViKPSB0whWtUG_ZD6d3Oanbnamoyr28yAt2H3g/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwj2a_1R9ehhAVGikPFOo5ga1Rg0d2hViKPSB0whWtUG_ZD6dOanbnamoyr28yAt2H3g/exec'; // Updated API_URL (example)
         console.log("Using Google Apps Script API_URL:", API_URL); // Added log for API_URL
 
         // Global variables to store summary data
@@ -1870,7 +1922,6 @@
             const signUpEmailPasswordButton = document.getElementById('signUpEmailPasswordButton');
             const signOutButton = document.getElementById('signOutButton');
 
-
             // Theme toggle elements
             const themeToggle = document.getElementById('themeToggle');
             const body = document.body;
@@ -2711,6 +2762,13 @@
             <div class="indicator"></div>
         </div>
     </div>
+
+    <div id="updateNotification" class="hidden fixed bottom-24 left-1/2 transform -translate-x-1/2 translate-y-full bg-[#2C2C2E] text-white px-6 py-3 rounded-md shadow-lg z-50">
+        <button class="close-button" id="closeUpdateNotification">&times;</button>
+        <p class="text-center">มีการอัปเดตใหม่! กรุณารีเฟรชเพื่อใช้งานเวอร์ชันล่าสุด</p>
+        <button id="refreshAppButton" class="ml-4">รีเฟรช</button>
+    </div>
+
 
     <div id="customModalOverlay" class="custom-modal-overlay hidden">
         <div class="custom-modal-content">

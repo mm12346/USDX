@@ -1,4 +1,4 @@
-const CACHE_NAME = 'usd-tracker-cache-v1'; // เปลี่ยนเวอร์ชัน cache เมื่อมีการอัปเดตเนื้อหา
+const CACHE_NAME = 'usd-tracker-cache-v1.1'; // เปลี่ยนเวอร์ชัน cache เมื่อมีการอัปเดตเนื้อหา
 const urlsToCache = [
     '/',
     '/index.html',

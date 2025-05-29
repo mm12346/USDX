@@ -2362,8 +2362,9 @@
         document.addEventListener('DOMContentLoaded', async function() {
             // Service Worker Registration
             if ('serviceWorker' in navigator) {
-                let newWorker;
-                navigator.serviceWorker.register('/service-worker.js')
+                const serviceWorkerUrl = '/service-worker.js';
+                console.log('Attempting to register Service Worker at:', serviceWorkerUrl);
+                navigator.serviceWorker.register(serviceWorkerUrl)
                     .then(reg => {
                         console.log('Service Worker Registered');
 
@@ -2388,6 +2389,8 @@
                     })
                     .catch(error => {
                         console.error('Service Worker registration failed: ตรวจสอบว่าไฟล์ service-worker.js อยู่ใน root directory ของคุณ และไม่มีข้อผิดพลาดในไฟล์นั้น', error);
+                        // Provide a user-friendly notification for service worker registration failure
+                        showNotification(errorNotification, 'ไม่สามารถลงทะเบียน Service Worker ได้: โปรดตรวจสอบไฟล์ service-worker.js และการตั้งค่าเซิร์ฟเวอร์');
                     });
 
                 // Listen for messages from the service worker

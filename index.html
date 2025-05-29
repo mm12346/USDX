@@ -780,7 +780,7 @@
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         // Updated imports for email/password authentication
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword as firebaseSignInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Your web app's Firebase configuration (provided by user)
@@ -1865,9 +1865,9 @@
         }
 
         // Function to handle Email/Password Sign-in
-        async function signInWithEmailAndPassword(email, password) {
+        async function handleSignInWithEmailPassword(email, password) { // Renamed function
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                await firebaseSignInWithEmailAndPassword(auth, email, password); // Use the aliased import
                 showNotification(successNotification, 'เข้าสู่ระบบสำเร็จ!');
             } catch (error) {
                 console.error("Error during Email/Password Sign-in:", error);
@@ -2340,14 +2340,14 @@
                 signInEmailPasswordButton.addEventListener('click', () => {
                     const email = emailInput.value;
                     const password = passwordInput.value;
-                    signInWithEmailPassword(email, password);
+                    handleSignInWithEmailPassword(email, password); // Call the renamed function
                 });
             }
             if (signUpEmailPasswordButton) {
                 signUpEmailPasswordButton.addEventListener('click', () => {
                     const email = emailInput.value;
                     const password = passwordInput.value;
-                    signUpWithEmailAndPassword(email, password);
+                    signUpWithEmailPassword(email, password);
                 });
             }
             if (signOutButton) {
@@ -2488,12 +2488,12 @@
                         document.getElementById('signInEmailPasswordButton').addEventListener('click', () => {
                             const email = document.getElementById('emailInput').value;
                             const password = document.getElementById('passwordInput').value;
-                            signInWithEmailPassword(email, password);
+                            handleSignInWithEmailPassword(email, password); // Call the renamed function
                         });
                         document.getElementById('signUpEmailPasswordButton').addEventListener('click', () => {
                             const email = document.getElementById('emailInput').value;
                             const password = document.getElementById('passwordInput').value;
-                            signUpWithEmailAndPassword(email, password);
+                            signUpWithEmailPassword(email, password);
                         });
                     }
 

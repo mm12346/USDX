@@ -815,7 +815,7 @@
         // Google Apps Script API URL
         // IMPORTANT: Replace this placeholder URL with your actual deployed Google Apps Script Web App URL.
         // Ensure the Apps Script is deployed as a Web App accessible by "Anyone".
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwj2a_1R9ehhAVGikPFOo5ga1Rg0d2hViKPSB0whWtUG_ZD6dOanbnamoyr28yAt2H3g/exec'; // Updated API_URL (example)
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwj2a_1R9ehhAVGikPFOo5ga1Rg0d2hViKPSB0whWtUG_ZD6d3Oanbnamoyr28yAt2H3g/exec'; // Updated API_URL
         console.log("Using Google Apps Script API_URL:", API_URL); // Added log for API_URL
 
         // Global variables to store summary data
@@ -1450,6 +1450,7 @@
                 body: formData
             })
             .then(response => {
+                console.log("History fetch response status:", response.status); // Log response status
                 if (!response.ok) {
                     console.error('Network response was not ok for history:', response.status, response.statusText, response.url);
                     throw new Error(`Network response was not ok for history: ${response.status} ${response.statusText}`);
@@ -1732,6 +1733,7 @@
                 body: formData
             })
             .then(response => {
+                console.log("Summary fetch response status:", response.status); // Log response status
                 if (!response.ok) {
                     // Log more details about the network response if it's not OK
                     console.error('Network response was not ok for summary:', response.status, response.statusText, response.url);
@@ -2102,6 +2104,7 @@
                     body: formData
                 })
                 .then(response => {
+                    console.log("Save data response status:", response.status); // Log response status
                     if (!response.ok) {
                         // Log more details about the network response if it's not OK
                         console.error('Network response was not ok:', response.status, response.statusText, response.url);
@@ -2174,6 +2177,7 @@
                     body: formData
                 })
                 .then(response => {
+                    console.log("Save sale data response status:", response.status); // Log response status
                     if (!response.ok) {
                         console.error('Network response was not ok for sale:', response.status, response.statusText, response.url);
                         throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
@@ -2360,7 +2364,8 @@
 
         // This function will be called once the DOM is fully loaded.
         document.addEventListener('DOMContentLoaded', async function() {
-            // Service Worker Registration
+            // Service Worker Registration (Commented out due to protocol error in Canvas environment)
+            /*
             if ('serviceWorker' in navigator) {
                 const serviceWorkerUrl = '/service-worker.js';
                 console.log('Attempting to register Service Worker at:', serviceWorkerUrl);
@@ -2419,6 +2424,7 @@
                     }, 300);
                 });
             }
+            */
 
             // Listen for auth state changes to get userId and fetch user's sheet ID
             onAuthStateChanged(window.auth, async (user) => {
@@ -2485,7 +2491,7 @@
                             <button id="signUpEmailPasswordButton" class="w-full form-button bg-gray-600 hover:bg-gray-700">
                                 ลงทะเบียน
                             </button>
-                            <p class="text-xs text-gray-500 mt-1">เข้าสู่ระบบเพื่อบันทึกข้อมูลของคุณ</p>
+                                <p class="text-xs text-gray-500 mt-1">เข้าสู่ระบบเพื่อบันทึกข้อมูลของคุณ</p>
                         `;
                         // Re-attach event listeners for newly created buttons
                         document.getElementById('signInEmailPasswordButton').addEventListener('click', () => {

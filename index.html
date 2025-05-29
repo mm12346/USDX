@@ -163,15 +163,16 @@
             color: #E5E7EB; /* Light gray icon color */
         }
 
+        /* Responsive font sizes for card titles, labels, and values */
         .card-title {
-            font-size: 1.125rem; /* text-lg */
+            font-size: clamp(1rem, 4vw, 1.125rem); /* text-base on small, text-lg on larger */
             font-weight: 600; /* font-semibold */
             color: #E5E7EB; /* Light gray for title */
             margin-bottom: 0.5rem; /* mb-2 */
         }
 
         .card-status {
-            font-size: 0.875rem; /* text-sm */
+            font-size: clamp(0.75rem, 3vw, 0.875rem); /* text-sm on small, text-sm on larger */
             color: #9CA3AF; /* Gray-400 for status */
             margin-bottom: 1rem;
         }
@@ -189,18 +190,18 @@
         }
 
         .summary-label {
-            font-size: 0.875rem; /* text-sm */
+            font-size: clamp(0.75rem, 3vw, 0.875rem); /* text-sm on small, text-sm on larger */
             color: #9CA3AF; /* Gray-400 */
         }
 
         .summary-value {
-            font-size: 1rem; /* text-base */
+            font-size: clamp(0.9rem, 3.5vw, 1rem); /* text-base on small, text-base on larger */
             font-weight: 500; /* font-medium */
             color: #F3F4F6; /* Lighter gray for values */
         }
 
         .highlight-value {
-            font-size: 1.125rem; /* text-lg */
+            font-size: clamp(1rem, 4vw, 1.125rem); /* text-lg on small, text-lg on larger */
             font-weight: 600; /* font-semibold */
             color: #FBBF24; /* Yellow-400 for highlights */
         }
@@ -245,8 +246,8 @@
             color: #F3F4F6; /* Light text */
             border-radius: 0.25rem; /* rounded-md */
             padding: 0.25rem 0.5rem;
-            width: 80px; /* Adjust width as needed */
-            font-size: 0.875rem;
+            width: clamp(60px, 15vw, 80px); /* Responsive width for input */
+            font-size: clamp(0.8rem, 3vw, 0.875rem); /* Responsive font size */
             margin-right: 0.5rem;
         }
 
@@ -271,7 +272,7 @@
             color: white;
             padding: 0.25rem 0.75rem;
             border-radius: 0.25rem;
-            font-size: 0.875rem;
+            font-size: clamp(0.75rem, 3vw, 0.875rem); /* Responsive font size */
         }
 
         .save-button:hover {
@@ -425,16 +426,19 @@
 
         .history-item .font-medium {
             color: #F3F4F6;
+            font-size: clamp(0.85rem, 3.5vw, 1rem); /* Responsive font size */
         }
         /* Adjust font-semibold for buy/sell history items */
         .history-item.buy .font-semibold {
             color: #60A5FA; /* Blue for USD amount in buy history */
+            font-size: clamp(0.95rem, 4vw, 1.125rem); /* Responsive font size */
         }
         body.light-theme .history-item.buy .font-semibold {
             color: #2563EB; /* Darker blue for USD amount in light theme buy history */
         }
         .history-item.sale .font-semibold {
             color: #EF4444; /* Red for USD amount in sale history */
+            font-size: clamp(0.95rem, 4vw, 1.125rem); /* Responsive font size */
         }
         body.light-theme .history-item.sale .font-semibold {
             color: #DC2626; /* Darker red for USD amount in light theme sale history */
@@ -442,6 +446,7 @@
 
         .history-item .text-sm {
             color: #9CA3AF;
+            font-size: clamp(0.7rem, 2.8vw, 0.875rem); /* Responsive font size */
         }
         .delete-button {
             background: none;
@@ -2563,7 +2568,7 @@
             <div class="swiper-slide">
                 <div class="container">
                     <div class="flex justify-between items-center mb-6 py-2">
-                        <h2 class="text-2xl font-bold text-gray-100">สรุปข้อมูล</h2>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-100">สรุปข้อมูล</h2>
                         <button id="refreshSummaryButton" class="text-blue-400 hover:text-blue-300 flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -2628,7 +2633,7 @@
 
             <div class="swiper-slide">
                 <div class="container">
-                    <h2 class="text-2xl font-bold text-gray-100 mb-6 text-center">บันทึกธุรกรรม USD</h2>
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-100 mb-6 text-center">บันทึกธุรกรรม USD</h2>
 
                     <div class="form-toggle-container">
                         <button id="buyFormToggleBtn" class="form-toggle-button active-toggle">บันทึกการซื้อ</button>
@@ -2669,7 +2674,7 @@
 
                             <div class="bg-[#2C2C2E] p-4 rounded-md">
                                 <p class="text-sm text-gray-400 mb-2">จำนวน USD ที่ได้รับ:</p>
-                                <p id="usdResult" class="text-xl font-semibold text-blue-400">0.00 USD</p>
+                                <p id="usdResult" class="text-lg sm:text-xl font-semibold text-blue-400">0.00 USD</p>
                             </div>
 
 
@@ -2714,7 +2719,7 @@
 
                             <div class="bg-[#2C2C2E] p-4 rounded-md">
                                 <p class="text-sm text-gray-400 mb-2">จำนวนเงินบาทที่ได้รับ:</p>
-                                <p id="thbReceiveResult" class="text-xl font-semibold text-blue-400">0.00 ฿</p>
+                                <p id="thbReceiveResult" class="text-lg sm:text-xl font-semibold text-blue-400">0.00 ฿</p>
                             </div>
 
 
@@ -2730,7 +2735,7 @@
                 <div class="container">
                     <div class="bg-[#2C2C2E] rounded-lg shadow-lg p-6 flex flex-col h-full">
                         <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-semibold text-gray-100">ประวัติธุรกรรม</h2>
+                            <h2 class="text-xl sm:text-2xl font-semibold text-gray-100">ประวัติธุรกรรม</h2>
                             <button id="refreshButton" class="text-blue-400 hover:text-blue-300 flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -2751,7 +2756,7 @@
             <div class="swiper-slide">
                 <div class="container">
                     <div class="bg-[#2C2C2E] rounded-lg shadow-lg p-6">
-                        <h2 class="text-xl font-semibold text-gray-100 mb-6">ตั้งค่า</h2>
+                        <h2 class="text-xl sm:text-2xl font-semibold text-gray-100 mb-6">ตั้งค่า</h2>
 
 
                         <div class="space-y-4">

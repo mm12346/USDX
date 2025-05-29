@@ -786,8 +786,21 @@
             display: none !important;
         }
 
-        /* Custom styles for Login/Registration page */
-        .login-card {
+        /* Custom styles for Login/Registration modal */
+        .login-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Ensure it's above everything else */
+        }
+
+        .login-modal-content {
             background-color: #FFFFFF; /* White background for login card */
             border-radius: 1rem; /* Rounded corners */
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Soft shadow */
@@ -918,8 +931,6 @@
         const profitLossCardEl = document.getElementById('profitLossCard'); // New profit/loss card
         const historyList = document.getElementById('historyList'); // For history tab
         const updateNotification = document.getElementById('updateNotification'); // Get update notification element
-        // const refreshAppButton = document.getElementById('refreshAppButton'); // Removed as service worker is commented out
-        // const closeUpdateNotification = document.getElementById('closeUpdateNotification'); // Removed as service worker is commented out
 
         // Custom Modal elements (moved to global scope)
         const customModalOverlay = document.getElementById('customModalOverlay');
@@ -927,6 +938,22 @@
         const customModalMessage = document.getElementById('customModalMessage');
         const customModalConfirmBtn = document.getElementById('customModalConfirmBtn');
         const customModalCancelBtn = document.getElementById('customModalCancelBtn');
+
+        // Login Modal elements (newly added)
+        const loginModalOverlay = document.getElementById('loginModalOverlay');
+        const loginModalAuthSection = document.getElementById('loginModalAuthSection'); // Renamed from loginAuthSection
+        const loginModalToggleSignIn = document.getElementById('loginModalToggleSignIn');
+        const loginModalToggleSignUp = document.getElementById('loginModalToggleSignUp');
+        const loginModalFormContainer = document.getElementById('loginModalFormContainer');
+        const signUpModalFormContainer = document.getElementById('signUpModalFormContainer');
+        const loginModalEmailInput = document.getElementById('loginModalEmailInput');
+        const loginModalPasswordInput = document.getElementById('loginModalPasswordInput');
+        const signInModalButton = document.getElementById('signInModalButton');
+        const signUpModalEmailInput = document.getElementById('signUpModalEmailInput');
+        const signUpModalPasswordInput = document.getElementById('signUpModalPasswordInput');
+        const signUpModalConfirmPasswordInput = document.getElementById('signUpModalConfirmPasswordInput');
+        const signUpModalSubmitButton = document.getElementById('signUpModalSubmitButton');
+        const loginModalSignOutButton = document.getElementById('loginModalSignOutButton');
 
 
         // Function to display notifications
@@ -1950,6 +1977,7 @@
             try {
                 await createUserWithEmailAndPassword(auth, email, password);
                 showNotification(successNotification, 'ลงทะเบียนสำเร็จ! คุณสามารถเข้าสู่ระบบได้แล้ว');
+                loginModalOverlay.classList.add('hidden'); // Hide modal on successful signup
             } catch (error) {
                 console.error("Error during Email/Password Sign-up:", error);
                 let errorMessage = 'ลงทะเบียนไม่สำเร็จ: ';
@@ -1971,6 +1999,7 @@
             try {
                 await firebaseSignInWithEmailAndPassword(auth, email, password); // Use the aliased import
                 showNotification(successNotification, 'เข้าสู่ระบบสำเร็จ!');
+                loginModalOverlay.classList.add('hidden'); // Hide modal on successful login
             } catch (error) {
                 console.error("Error during Email/Password Sign-in:", error);
                 let errorMessage = 'เข้าสู่ระบบไม่สำเร็จ: ';
@@ -1991,6 +2020,8 @@
                 await signOut(auth);
                 // onAuthStateChanged will handle resetting userId and UI
                 showNotification(successNotification, 'ออกจากระบบสำเร็จ');
+                // Show login modal after sign out
+                loginModalOverlay.classList.remove('hidden');
             } catch (error) {
                 console.error("Error during sign out:", error);
                 showNotification(errorNotification, 'ออกจากระบบไม่สำเร็จ: ' + error.message);
@@ -2029,24 +2060,6 @@
             const displayUserId = document.getElementById('displayUserId');
             const signOutButtonSettings = document.getElementById('signOutButtonSettings'); // New sign out button in settings
 
-
-            // New email/password input fields and buttons (on login page)
-            const loginEmailInput = document.getElementById('loginEmailInput');
-            const loginPasswordInput = document.getElementById('loginPasswordInput');
-            const signInButton = document.getElementById('signInButton');
-            const signUpButton = document.getElementById('signUpButton');
-            const loginAuthSection = document.getElementById('loginAuthSection');
-            const loginToggleSignIn = document.getElementById('loginToggleSignIn');
-            const loginToggleSignUp = document.getElementById('loginToggleSignUp');
-            const loginFormContainer = document.getElementById('loginFormContainer');
-            const signUpFormContainer = document.getElementById('signUpFormContainer');
-            const signUpEmailInput = document.getElementById('signUpEmailInput');
-            const signUpPasswordInput = document.getElementById('signUpPasswordInput');
-            const signUpConfirmPasswordInput = document.getElementById('signUpConfirmPasswordInput');
-            const signUpSubmitButton = document.getElementById('signUpSubmitButton');
-            const loginSignOutButton = document.getElementById('loginSignOutButton');
-
-
             // Theme toggle elements
             const themeToggle = document.getElementById('themeToggle');
             const body = document.body;
@@ -2055,7 +2068,7 @@
 
             // Initialize Swiper for tab navigation
             swiperInstance = new Swiper(".mySwiper", { // Assign to global swiperInstance
-                initialSlide: 0, // Default to login tab
+                initialSlide: 0, // Default to Summary tab (now index 0)
                 effect: "slide", // Slide transition effect
                 speed: 300, // Transition speed
                 allowTouchMove: false, // Initially disable touch move until authenticated
@@ -2065,28 +2078,22 @@
                     // Update bottom navigation when slide changes
                     slideChange: function() {
                         updateNavigation(this.activeIndex);
-                        // Hide bottom nav on login page (index 0)
-                        if (this.activeIndex === 0) {
-                            document.querySelector('.bottom-nav').classList.add('hidden');
-                        } else {
-                            document.querySelector('.bottom-nav').classList.remove('hidden');
-                        }
                     },
                     // Load data specific to the tab after slide transition ends
                     slideChangeTransitionEnd: function() {
-                        if (this.activeIndex === 1) { // Summary tab
+                        if (this.activeIndex === 0) { // Summary tab (now index 0)
                             if (window.userSheetId) {
                                 fetchSummary();
                             } else if (window.userId) { // If logged in but no sheet ID
                                 showNotification(document.getElementById('errorNotification'), 'กรุณาตั้งค่า Google Sheet ID ในหน้าตั้งค่าก่อน');
-                            } else { // Not logged in
+                            } else { // Not logged in (should be prevented by allowTouchMove anyway)
                                  const noSheetIdMessage = '<p class="text-gray-500 text-center py-4">โปรดเข้าสู่ระบบเพื่อดูข้อมูล</p>';
                                  totalCardEl.innerHTML = noSheetIdMessage;
                                  ratesCardEl.innerHTML = noSheetIdMessage;
                                  buyCardEl.innerHTML = noSheetIdMessage;
                                  profitLossCardEl.innerHTML = noSheetIdMessage;
                             }
-                        } else if (this.activeIndex === 2) { // Record tab
+                        } else if (this.activeIndex === 1) { // Record tab (now index 1)
                             const today = new Date();
                             const formattedDate = today.toISOString().split('T')[0];
                             const dateInput = document.getElementById('date');
@@ -2099,49 +2106,23 @@
                                 dateSellInput.value = formattedDate;
                                 calculateTHBForSale();
                             }
-                        } else if (this.activeIndex === 3) { // History tab
+                        } else if (this.activeIndex === 2) { // History tab (now index 2)
                             fetchHistory();
                         }
                     },
-                    // Prevent swiping from login page to other pages if not logged in
-                    // and prevent swiping back to login page if logged in.
-                    // This is handled more robustly by `allowTouchMove` and `onAuthStateChanged`
-                    // but adding a safety check here for explicit user swipes.
+                    // Prevent swiping if not logged in
                     touchStart: function(swiper, event) {
-                        // If logged in and on Summary tab (index 1), disable swiping back (allowSlidePrev)
-                        if (window.userId && swiper.activeIndex === 1) {
-                            swiper.allowSlidePrev = false;
-                        } else {
-                            // Otherwise, allow swiping previous for other content tabs
-                            swiper.allowSlidePrev = true;
-                        }
-                        // Always allow swiping next for content tabs if logged in
-                        if (window.userId && swiper.activeIndex < 4) { // Max index is 4 (Settings)
-                            swiper.allowSlideNext = true;
-                        } else {
-                            swiper.allowSlideNext = false; // Disable swiping next if at the last tab
-                        }
-
-                        // If not logged in, prevent all swiping
                         if (!window.userId) {
                             swiper.allowTouchMove = false;
+                        } else {
+                            swiper.allowTouchMove = true;
                         }
                     },
                     touchEnd: function(swiper, event) {
-                         // Re-evaluate allowTouchMove and allowSlidePrev/Next based on auth state
                          if (window.userId) {
-                             swiper.allowTouchMove = true; // Allow general touch move for content tabs
-                             // Re-set allowSlidePrev based on activeIndex, specifically for index 1
-                             if (swiper.activeIndex === 1) {
-                                 swiper.allowSlidePrev = false;
-                             } else {
-                                 swiper.allowSlidePrev = true;
-                             }
-                             swiper.allowSlideNext = true;
+                             swiper.allowTouchMove = true;
                          } else {
                              swiper.allowTouchMove = false;
-                             swiper.allowSlidePrev = false;
-                             swiper.allowSlideNext = false;
                          }
                     }
                 }
@@ -2150,10 +2131,8 @@
 
             // Function to update the active state of bottom navigation items and indicators
             function updateNavigation(index) {
-                // Adjust index for bottom nav as login page is not part of bottom nav
-                const navIndex = index - 1; // If current index is 0 (login), navIndex is -1. If 1 (summary), navIndex is 0.
                 navItems.forEach((item, i) => {
-                    if (i === navIndex) {
+                    if (i === index) { // Directly use index as login slide is removed
                         item.classList.add('active'); // Add active class
                     } else {
                         item.classList.remove('active'); // Remove active class
@@ -2162,7 +2141,7 @@
 
 
                 indicators.forEach((indicator, i) => {
-                    if (i === navIndex) {
+                    if (i === index) { // Directly use index
                         indicator.classList.add('active'); // Add active class
                     } else {
                         indicator.classList.remove('active'); // Remove active class
@@ -2176,7 +2155,7 @@
                 item.addEventListener('click', function() {
                     const targetIndex = parseInt(this.getAttribute('data-index')); // Get index from data-index attribute
                     if (window.userId) {
-                        // If logged in, allow navigation to any content tab (1, 2, 3, 4)
+                        // If logged in, allow navigation to any content tab (0, 1, 2, 3)
                         if (swiperInstance) {
                             swiperInstance.slideTo(targetIndex);
                         }
@@ -2297,7 +2276,7 @@
                         // Navigate to summary tab after successful save
                         setTimeout(() => {
                             if (swiperInstance) { // Use swiperInstance
-                                swiperInstance.slideTo(1); // Go to summary tab (now index 1)
+                                swiperInstance.slideTo(0); // Go to summary tab (now index 0)
                             }
                             fetchSummary(); // Reload summary data
                         }, 1000);
@@ -2361,7 +2340,7 @@
                         thbReceiveResultElement.textContent = '0.00 ฿';
                         setTimeout(() => {
                             if (swiperInstance) {
-                                swiperInstance.slideTo(1); // Go to summary tab (now index 1)
+                                swiperInstance.slideTo(0); // Go to summary tab (now index 0)
                             }
                             fetchSummary(); // Reload summary data
                         }, 1000);
@@ -2502,7 +2481,7 @@
                         fetchSummary();
                         // If user just saved sheet ID, navigate to summary
                         if (swiperInstance) {
-                            swiperInstance.slideTo(1); // Go to summary tab (now index 1)
+                            swiperInstance.slideTo(0); // Go to summary tab (now index 0)
                         }
                     } else {
                         showNotification(errorNotification, 'ไม่สามารถบันทึก Google Sheet ID ได้');
@@ -2512,20 +2491,20 @@
                 }
             });
 
-            // Event listeners for login/signup buttons on the login page
-            if (signInButton) {
-                signInButton.addEventListener('click', () => {
-                    const email = loginEmailInput.value;
-                    const password = loginPasswordInput.value;
+            // Event listeners for login/signup buttons on the login modal
+            if (signInModalButton) {
+                signInModalButton.addEventListener('click', () => {
+                    const email = loginModalEmailInput.value;
+                    const password = loginModalPasswordInput.value;
                     handleSignInWithEmailPassword(email, password);
                 });
             }
 
-            if (signUpSubmitButton) { // Changed from signUpEmailPasswordButton
-                signUpSubmitButton.addEventListener('click', () => {
-                    const email = signUpEmailInput.value;
-                    const password = signUpPasswordInput.value;
-                    const confirmPassword = signUpConfirmPasswordInput.value;
+            if (signUpModalSubmitButton) {
+                signUpModalSubmitButton.addEventListener('click', () => {
+                    const email = signUpModalEmailInput.value;
+                    const password = signUpModalPasswordInput.value;
+                    const confirmPassword = signUpModalConfirmPasswordInput.value;
 
                     if (password !== confirmPassword) {
                         showNotification(errorNotification, 'รหัสผ่านไม่ตรงกัน');
@@ -2535,8 +2514,8 @@
                 });
             }
 
-            if (loginSignOutButton) { // Renamed from signOutButton
-                loginSignOutButton.addEventListener('click', signOutUser);
+            if (loginModalSignOutButton) {
+                loginModalSignOutButton.addEventListener('click', signOutUser);
             }
 
             // Sign out button in settings
@@ -2544,102 +2523,45 @@
                 signOutButtonSettings.addEventListener('click', signOutUser);
             }
 
-            // Login/Sign-up form toggle logic
-            loginToggleSignIn.addEventListener('click', () => {
-                loginToggleSignIn.classList.add('active-login-tab');
-                loginToggleSignUp.classList.remove('active-login-tab');
-                loginFormContainer.classList.remove('hidden');
-                signUpFormContainer.classList.add('hidden');
-            });
+            // Login/Sign-up form toggle logic for the modal
+            if (loginModalToggleSignIn) {
+                loginModalToggleSignIn.addEventListener('click', () => {
+                    loginModalToggleSignIn.classList.add('active-login-tab');
+                    loginModalToggleSignUp.classList.remove('active-login-tab');
+                    loginModalFormContainer.classList.remove('hidden');
+                    signUpModalFormContainer.classList.add('hidden');
+                });
+            }
 
-            loginToggleSignUp.addEventListener('click', () => {
-                loginToggleSignUp.classList.add('active-login-tab');
-                loginToggleSignIn.classList.remove('active-login-tab');
-                signUpFormContainer.classList.remove('hidden');
-                loginFormContainer.classList.add('hidden');
-            });
+            if (loginModalToggleSignUp) {
+                loginModalToggleSignUp.addEventListener('click', () => {
+                    loginModalToggleSignUp.classList.add('active-login-tab');
+                    loginModalToggleSignIn.classList.remove('active-login-tab');
+                    signUpModalFormContainer.classList.remove('hidden');
+                    loginModalFormContainer.classList.add('hidden');
+                });
+            }
 
-            // Set initial login form view (default to sign-in)
-            loginToggleSignIn.click();
+            // Set initial login form view (default to sign-in) for the modal
+            if (loginModalToggleSignIn) {
+                loginModalToggleSignIn.click();
+            }
         }
 
         let isAppInitialized = false; // New flag to ensure initializeAppComponent runs only once
 
         // This function will be called once the DOM is fully loaded.
         document.addEventListener('DOMContentLoaded', async function() {
-            // Ensure update notification is hidden on load if service worker is not active
+            // Ensure update notification is hidden on load
             const updateNotification = document.getElementById('updateNotification');
             if (updateNotification) {
                 updateNotification.classList.add('hidden');
                 updateNotification.classList.add('translate-y-full');
             }
 
-            // Service Worker Registration (Commented out due to protocol error in Canvas environment)
-            /*
-            if ('serviceWorker' in navigator) {
-                const serviceWorkerUrl = '/service-worker.js';
-                console.log('Attempting to register Service Worker at:', serviceWorkerUrl);
-                navigator.serviceWorker.register(serviceWorkerUrl)
-                    .then(reg => {
-                        console.log('Service Worker Registered');
-
-                        reg.addEventListener('updatefound', () => {
-                            // A new service worker has appeared in reg.installing!
-                            newWorker = reg.installing;
-                            newWorker.addEventListener('statechange', () => {
-                                // Has network.state changed?
-                                if (newWorker.state === 'installed') {
-                                    if (navigator.serviceWorker.controller) {
-                                        // new update available
-                                        console.log('New content available, please refresh.');
-                                        updateNotification.classList.remove('translate-y-full', 'hidden');
-                                        updateNotification.classList.add('translate-y-0');
-                                    } else {
-                                        // Content is cached for offline use.
-                                        console.log('Content is cached for offline use.');
-                                    }
-                                }
-                            });
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Service Worker registration failed: ตรวจสอบว่าไฟล์ service-worker.js อยู่ใน root directory ของคุณ และไม่มีข้อผิดพลาดในไฟล์นั้น', error);
-                        // Provide a user-friendly notification for service worker registration failure
-                        showNotification(errorNotification, 'ไม่สามารถลงทะเบียน Service Worker ได้: โปรดตรวจสอบไฟล์ service-worker.js และการตั้งค่าเซิร์ฟเวอร์');
-                    });
-
-                // Listen for messages from the service worker
-                navigator.serviceWorker.addEventListener('message', (event) => {
-                    if (event.data && event.data.type === 'RELOAD_APP') {
-                        window.location.reload();
-                    }
-                });
-                
-                // Event listener for the refresh button in the update notification
-                refreshAppButton.addEventListener('click', () => {
-                    if (newWorker) {
-                        newWorker.postMessage({ type: 'SKIP_WAITING' });
-                        updateNotification.classList.add('translate-y-full'); // Hide notification
-                        // The service worker will handle the reload after skipping waiting
-                    } else {
-                        window.location.reload(); // Fallback if newWorker is not set
-                    }
-                });
-
-                // Event listener for the close button in the update notification
-                closeUpdateNotification.addEventListener('click', () => {
-                    updateNotification.classList.add('translate-y-full'); // Hide notification
-                    setTimeout(() => {
-                        updateNotification.classList.add('hidden'); // Fully hide after transition
-                    }, 300);
-                });
-            }
-            */
-
             // Listen for auth state changes to get userId and fetch user's sheet ID
             onAuthStateChanged(window.auth, async (user) => {
                 const displayUserIdElement = document.getElementById('displayUserId');
-                const loginAuthSection = document.getElementById('loginAuthSection');
 
                 if (user) {
                     // User is signed in
@@ -2648,32 +2570,19 @@
                     if (displayUserIdElement) {
                         displayUserIdElement.textContent = window.userId;
                     }
-                    if (loginAuthSection) {
-                        // If logged in, show sign-out button on the login page
-                        loginAuthSection.innerHTML = `
-                            <h3 class="font-medium text-gray-800 mb-2">สถานะการเข้าสู่ระบบ</h3>
-                            <p class="text-gray-600 mb-4 break-all">เข้าสู่ระบบในชื่อ: <span class="font-semibold">${user.email || 'ผู้ใช้ไม่ระบุ'}</span></p>
-                            <button id="loginSignOutButton" class="w-full login-button bg-red-500 hover:bg-red-600">
-                                ออกจากระบบ
-                            </button>
-                        `;
-                        document.getElementById('loginSignOutButton').addEventListener('click', signOutUser);
-                    }
+                    // Hide login modal if user is logged in
+                    loginModalOverlay.classList.add('hidden');
 
                     await fetchUserSheetId(); // Fetch user's sheet ID
 
-                    // If logged in, prevent access to login slide (index 0)
+                    // If logged in, allow swiper touch move and show bottom nav
                     if (swiperInstance) {
-                        swiperInstance.allowTouchMove = true; // Allow swiping between content tabs
-                        // When logged in, ensure that swiping back from Summary (index 1) to Login (index 0) is disabled
-                        swiperInstance.allowSlidePrev = (swiperInstance.activeIndex !== 1);
-                        swiperInstance.allowSlideNext = true; // Always allow swiping forward
-
-                        if (swiperInstance.activeIndex === 0) { // If currently on login page, move to summary
-                            swiperInstance.slideTo(1);
-                        }
-                        document.querySelector('.bottom-nav').classList.remove('hidden'); // Show bottom nav
+                        swiperInstance.allowTouchMove = true;
+                        swiperInstance.allowSlidePrev = true; // Allow swiping prev between content tabs
+                        swiperInstance.allowSlideNext = true; // Allow swiping next between content tabs
+                        swiperInstance.slideTo(0); // Go to summary tab (now index 0)
                     }
+                    document.querySelector('.bottom-nav').classList.remove('hidden'); // Show bottom nav
 
                     // Then, if sheet ID is missing, show notification.
                     if (!window.userSheetId) {
@@ -2690,82 +2599,8 @@
                     if (displayUserIdElement) {
                         displayUserIdElement.textContent = 'N/A (ไม่ได้เข้าสู่ระบบ)';
                     }
-                    if (loginAuthSection) {
-                        // If not logged in, show login/signup forms on the login page
-                        loginAuthSection.innerHTML = `
-                            <div class="login-toggle-container">
-                                <button id="loginToggleSignIn" class="login-toggle-button active-login-tab">เข้าสู่ระบบ</button>
-                                <button id="loginToggleSignUp" class="login-toggle-button">ลงทะเบียน</button>
-                            </div>
-
-                            <div id="loginFormContainer" class="space-y-4">
-                                <div>
-                                    <label for="loginEmailInput" class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
-                                    <input type="email" id="loginEmailInput" placeholder="กรอกอีเมล"
-                                        class="login-input">
-                                </div>
-                                <div>
-                                    <label for="loginPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
-                                    <input type="password" id="loginPasswordInput" placeholder="กรอกรหัสผ่าน"
-                                        class="login-input">
-                                </div>
-                                <button id="signInButton" class="login-button">
-                                    เข้าสู่ระบบ
-                                </button>
-                            </div>
-
-                            <div id="signUpFormContainer" class="space-y-4 hidden">
-                                <div>
-                                    <label for="signUpEmailInput" class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
-                                    <input type="email" id="signUpEmailInput" placeholder="กรอกอีเมล"
-                                        class="login-input">
-                                </div>
-                                <div>
-                                    <label for="signUpPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
-                                    <input type="password" id="signUpPasswordInput" placeholder="กรอกรหัสผ่าน"
-                                        class="login-input">
-                                </div>
-                                <div>
-                                    <label for="signUpConfirmPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">ยืนยันรหัสผ่าน</label>
-                                    <input type="password" id="signUpConfirmPasswordInput" placeholder="ยืนยันรหัสผ่าน"
-                                        class="login-input">
-                                </div>
-                                <button id="signUpSubmitButton" class="login-button">
-                                    ลงทะเบียน
-                                </button>
-                            </div>
-                        `;
-                        // Re-attach event listeners for newly created buttons and toggles
-                        document.getElementById('loginToggleSignIn').addEventListener('click', () => {
-                            document.getElementById('loginToggleSignIn').classList.add('active-login-tab');
-                            document.getElementById('loginToggleSignUp').classList.remove('active-login-tab');
-                            document.getElementById('loginFormContainer').classList.remove('hidden');
-                            document.getElementById('signUpFormContainer').classList.add('hidden');
-                        });
-                        document.getElementById('loginToggleSignUp').addEventListener('click', () => {
-                            document.getElementById('loginToggleSignUp').classList.add('active-login-tab');
-                            document.getElementById('loginToggleSignIn').classList.remove('active-login-tab');
-                            document.getElementById('signUpFormContainer').classList.remove('hidden');
-                            document.getElementById('loginFormContainer').classList.add('hidden');
-                        });
-                        document.getElementById('signInButton').addEventListener('click', () => {
-                            const email = document.getElementById('loginEmailInput').value;
-                            const password = document.getElementById('loginPasswordInput').value;
-                            handleSignInWithEmailPassword(email, password);
-                        });
-                        document.getElementById('signUpSubmitButton').addEventListener('click', () => {
-                            const email = document.getElementById('signUpEmailInput').value;
-                            const password = document.getElementById('signUpPasswordInput').value;
-                            const confirmPassword = document.getElementById('signUpConfirmPasswordInput').value;
-                            if (password !== confirmPassword) {
-                                showNotification(errorNotification, 'รหัสผ่านไม่ตรงกัน');
-                                return;
-                            }
-                            signUpWithEmailPassword(email, password);
-                        });
-                        // Set default to sign-in form
-                        document.getElementById('loginToggleSignIn').click();
-                    }
+                    // Show login modal if user is not logged in
+                    loginModalOverlay.classList.remove('hidden');
 
                     // Clear summary and history if no user is logged in
                     const noAuthMessage = '<p class="text-gray-500 text-center py-4">โปรดเข้าสู่ระบบเพื่อดูข้อมูล</p>';
@@ -2776,12 +2611,12 @@
                     historyList.innerHTML = noAuthMessage;
 
                     if (swiperInstance) {
-                        swiperInstance.slideTo(0); // Force to login tab
-                        swiperInstance.allowTouchMove = false; // Disable swiping away from login
-                        swiperInstance.allowSlidePrev = false; // Ensure no swiping prev
-                        swiperInstance.allowSlideNext = false; // Ensure no swiping next
-                        document.querySelector('.bottom-nav').classList.add('hidden'); // Hide bottom nav
+                        swiperInstance.slideTo(0); // Ensure it's on the first content slide (Summary)
+                        swiperInstance.allowTouchMove = false; // Disable swiping when not logged in
+                        swiperInstance.allowSlidePrev = false;
+                        swiperInstance.allowSlideNext = false;
                     }
+                    document.querySelector('.bottom-nav').classList.add('hidden'); // Hide bottom nav
                     showNotification(document.getElementById('errorNotification'), 'โปรดเข้าสู่ระบบเพื่อใช้งาน');
                 }
                 // Initialize app components only once, after the initial auth state is determined
@@ -2796,59 +2631,6 @@
 <body>
     <div class="swiper mySwiper">
         <div class="swiper-wrapper">
-            <div class="swiper-slide">
-                <div class="container flex flex-col items-center justify-center h-full">
-                    <h2 class="text-3xl font-bold text-white mb-8">ยินดีต้อนรับ</h2>
-
-                    <div class="login-card">
-                        <div id="loginAuthSection" class="space-y-4">
-                            <div class="login-toggle-container">
-                                <button id="loginToggleSignIn" class="login-toggle-button active-login-tab">เข้าสู่ระบบ</button>
-                                <button id="loginToggleSignUp" class="login-toggle-button">ลงทะเบียน</button>
-                            </div>
-
-                            <div id="loginFormContainer" class="space-y-4">
-                                <div>
-                                    <label for="loginEmailInput" class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
-                                    <input type="email" id="loginEmailInput" placeholder="กรอก อีเมล ของ คุณ"
-                                        class="login-input">
-                                </div>
-                                <div>
-                                    <label for="loginPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
-                                    <input type="password" id="loginPasswordInput" placeholder="กรอก รหัส ผ่าน ของ คุณ"
-                                        class="login-input">
-                                </div>
-                                <button id="signInButton" class="login-button">
-                                    เข้าสู่ระบบ
-                                </button>
-                            </div>
-
-                            <div id="signUpFormContainer" class="space-y-4 hidden">
-                                <div>
-                                    <label for="signUpEmailInput" class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
-                                    <input type="email" id="signUpEmailInput" placeholder="กรอก อีเมล ของ คุณ"
-                                        class="login-input">
-                                </div>
-                                <div>
-                                    <label for="signUpPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
-                                    <input type="password" id="signUpPasswordInput" placeholder="กรอก รหัส ผ่าน ของ คุณ"
-                                        class="login-input">
-                                </div>
-                                <div>
-                                    <label for="signUpConfirmPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">ยืนยันรหัสผ่าน</label>
-                                    <input type="password" id="signUpConfirmPasswordInput" placeholder="ยืนยัน รหัส ผ่าน ของ คุณ"
-                                        class="login-input">
-                                </div>
-                                <button id="signUpSubmitButton" class="login-button">
-                                    ลงทะเบียน
-                                </button>
-                            </div>
-                        </div>
-                        <p class="login-version text-center">V 1.0.6</p>
-                    </div>
-                </div>
-            </div>
-
             <div class="swiper-slide bg-[#121212]">
                 <div class="container">
                     <div class="flex justify-between items-center mb-6 py-2">
@@ -3117,16 +2899,16 @@
 
 
     <div class="bottom-nav hidden"> <div class="grid grid-cols-4 gap-2">
-            <div class="nav-item" data-index="1"> <div class="emoji">📈</div>
+            <div class="nav-item" data-index="0"> <div class="emoji">📈</div>
                 <div class="label">สรุป</div>
             </div>
-            <div class="nav-item" data-index="2"> <div class="emoji">📝</div>
+            <div class="nav-item" data-index="1"> <div class="emoji">📝</div>
                 <div class="label">บันทึก</div>
             </div>
-            <div class="nav-item" data-index="3"> <div class="emoji">📚</div>
+            <div class="nav-item" data-index="2"> <div class="emoji">📚</div>
                 <div class="label">ประวัติ</div>
             </div>
-            <div class="nav-item" data-index="4"> <div class="emoji">⚙️</div>
+            <div class="nav-item" data-index="3"> <div class="emoji">⚙️</div>
                 <div class="label">ตั้งค่า</div>
             </div>
         </div>
@@ -3153,6 +2935,57 @@
             </div>
         </div>
     </div>
+
+    <div id="loginModalOverlay" class="login-modal-overlay hidden">
+        <div class="login-modal-content">
+            <h2 class="text-2xl font-bold text-gray-800 mb-8 text-center">ยินดีต้อนรับ</h2>
+            <div id="loginModalAuthSection" class="space-y-4">
+                <div class="login-toggle-container">
+                    <button id="loginModalToggleSignIn" class="login-toggle-button active-login-tab">เข้าสู่ระบบ</button>
+                    <button id="loginModalToggleSignUp" class="login-toggle-button">ลงทะเบียน</button>
+                </div>
+
+                <div id="loginModalFormContainer" class="space-y-4">
+                    <div>
+                        <label for="loginModalEmailInput" class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                        <input type="email" id="loginModalEmailInput" placeholder="กรอกอีเมล"
+                            class="login-input">
+                    </div>
+                    <div>
+                        <label for="loginModalPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+                        <input type="password" id="loginModalPasswordInput" placeholder="กรอกรหัสผ่าน"
+                            class="login-input">
+                    </div>
+                    <button id="signInModalButton" class="login-button">
+                        เข้าสู่ระบบ
+                    </button>
+                </div>
+
+                <div id="signUpModalFormContainer" class="space-y-4 hidden">
+                    <div>
+                        <label for="signUpModalEmailInput" class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                        <input type="email" id="signUpModalEmailInput" placeholder="กรอกอีเมล"
+                            class="login-input">
+                    </div>
+                    <div>
+                        <label for="signUpModalPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+                        <input type="password" id="signUpModalPasswordInput" placeholder="กรอกรหัสผ่าน"
+                            class="login-input">
+                    </div>
+                    <div>
+                        <label for="signUpModalConfirmPasswordInput" class="block text-sm font-medium text-gray-700 mb-1">ยืนยันรหัสผ่าน</label>
+                        <input type="password" id="signUpModalConfirmPasswordInput" placeholder="ยืนยันรหัสผ่าน"
+                            class="login-input">
+                    </div>
+                    <button id="signUpModalSubmitButton" class="login-button">
+                        ลงทะเบียน
+                    </button>
+                </div>
+            </div>
+            <p class="login-version text-center">V 1.0.6</p>
+        </div>
+    </div>
+
 
     <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-[#2C2C2E] p-5 rounded-lg flex flex-col items-center">

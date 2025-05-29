@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>บันทึกการซื้อ USD</title>
-    <link rel="manifest" href="/manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -757,7 +756,6 @@
         // Google Apps Script API URL
         // IMPORTANT: Replace this placeholder URL with your actual deployed Google Apps Script Web App URL.
         // Ensure the Apps Script is deployed as a Web App accessible by "Anyone".
-        // Reverted to the original URL from the user's provided file.
         const API_URL = 'https://script.google.com/macros/s/AKfycbwj2a_1R9ehhAVGikPFOo5ga1Rg0d2hViKPSB0whWtUG_ZD6d3Oanbnamoyr28yAt2H3g/exec';
         console.log("Using Google Apps Script API_URL:", API_URL); // Added log for API_URL
 
@@ -771,7 +769,7 @@
         const totalCardEl = document.getElementById('totalCard');
         const ratesCardEl = document.getElementById('ratesCard');
         const buyCardEl = document.getElementById('buyCard');
-        const profitLossCardEl = document.getElementById('profitLossCard');
+        const profitLossCardEl = document.getElementById('profitLossCard'); // New profit/loss card
         const historyList = document.getElementById('historyList'); // For history tab
 
         // Custom Modal elements (moved to global scope)
@@ -2203,7 +2201,7 @@
                             "symbol": "FX_IDC:USDTHB",
                             "interval": "D",
                             "timezone": "Asia/Bangkok",
-                            "theme": "dark",
+                            "theme": "dark", // Set to dark
                             "style": "1",
                             "locale": "th_TH",
                             "enable_publishing": false,
@@ -2227,7 +2225,7 @@
                             "symbol": "FX_IDC:USDTHB",
                             "interval": "D",
                             "timezone": "Asia/Bangkok",
-                            "theme": "light",
+                            "theme": "light", // Set to light
                             "style": "1",
                             "locale": "th_TH",
                             "enable_publishing": false,
@@ -2305,13 +2303,8 @@
             onAuthStateChanged(window.auth, async (user) => {
                 const displayUserIdElement = document.getElementById('displayUserId');
                 const authSection = document.getElementById('authSection'); // The div containing email/password inputs and buttons
-                // Ensure these elements are re-fetched as they might be re-rendered
-                let emailInput = document.getElementById('emailInput');
-                let passwordInput = document.getElementById('passwordInput');
-                let signInEmailPasswordButton = document.getElementById('signInEmailPasswordButton');
-                let signUpEmailPasswordButton = document.getElementById('signUpEmailPasswordButton');
-                let signOutButton = document.getElementById('signOutButton');
-
+                const emailInput = document.getElementById('emailInput');
+                const passwordInput = document.getElementById('passwordInput');
 
                 if (user) {
                     window.userId = user.uid;
@@ -2329,8 +2322,7 @@
                             <p class="text-xs text-gray-500 mt-1">เข้าสู่ระบบเพื่อบันทึกข้อมูลของคุณ</p>
                         `;
                         // Re-attach event listener for signOutButton after re-rendering
-                        signOutButton = document.getElementById('signOutButton'); // Re-fetch the new button
-                        if (signOutButton) signOutButton.addEventListener('click', signOutUser);
+                        document.getElementById('signOutButton').addEventListener('click', signOutUser);
                     }
 
                     await fetchUserSheetId(); // Fetch user's sheet ID
@@ -2375,19 +2367,14 @@
                             <p class="text-xs text-gray-500 mt-1">เข้าสู่ระบบเพื่อบันทึกข้อมูลของคุณ</p>
                         `;
                         // Re-attach event listeners for newly created buttons
-                        emailInput = document.getElementById('emailInput');
-                        passwordInput = document.getElementById('passwordInput');
-                        signInEmailPasswordButton = document.getElementById('signInEmailPasswordButton');
-                        signUpEmailPasswordButton = document.getElementById('signUpEmailPasswordButton');
-
-                        if (signInEmailPasswordButton) signInEmailPasswordButton.addEventListener('click', () => {
-                            const email = emailInput.value;
-                            const password = passwordInput.value;
+                        document.getElementById('signInEmailPasswordButton').addEventListener('click', () => {
+                            const email = document.getElementById('emailInput').value;
+                            const password = document.getElementById('passwordInput').value;
                             signInWithEmailPassword(email, password);
                         });
-                        if (signUpEmailPasswordButton) signUpEmailPasswordButton.addEventListener('click', () => {
-                            const email = emailInput.value;
-                            const password = passwordInput.value;
+                        document.getElementById('signUpEmailPasswordButton').addEventListener('click', () => {
+                            const email = document.getElementById('emailInput').value;
+                            const password = document.getElementById('passwordInput').value;
                             signUpWithEmailPassword(email, password);
                         });
                     }
@@ -2410,7 +2397,6 @@
             });
         });
     </script>
-    <script src="app.js" type="module"></script>
 </head>
 <body>
     <div class="swiper mySwiper">

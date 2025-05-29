@@ -1,5 +1,5 @@
 // กำหนดชื่อแคชและเวอร์ชัน
-const CACHE_NAME = 'usdx-cache-v1.0.6'; // เปลี่ยนเวอร์ชันเมื่อมีการอัปเดตไฟล์
+const CACHE_NAME = 'usdx-cache-v1.0.7'; // เปลี่ยนเวอร์ชันเมื่อมีการอัปเดตไฟล์
 const urlsToCache = [
   '/',
   '/index.html',

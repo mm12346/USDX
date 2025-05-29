@@ -12,8 +12,10 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="USDX"> <link rel="apple-touch-icon" href="/icons/icon-180x180.png">
-    <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png"> <style>
+    <meta name="apple-mobile-web-app-title" content="USDX">
+    <link rel="apple-touch-icon" href="/icons/icon-180x180.png">
+    <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png">
+    <style>
         /* Custom styles for smooth scrolling and fixed bottom nav */
         body {
             font-family: 'Prompt', sans-serif;
@@ -823,6 +825,9 @@
         const buyCardEl = document.getElementById('buyCard');
         const profitLossCardEl = document.getElementById('profitLossCard'); // New profit/loss card
         const historyList = document.getElementById('historyList'); // For history tab
+        const updateNotification = document.getElementById('updateNotification'); // Get update notification element
+        const refreshAppButton = document.getElementById('refreshAppButton'); // Get refresh button
+        const closeUpdateNotification = document.getElementById('closeUpdateNotification'); // Get close button
 
         // Custom Modal elements (moved to global scope)
         const customModalOverlay = document.getElementById('customModalOverlay');
@@ -1855,15 +1860,15 @@
         }
 
         // Function to handle Email/Password Sign-in
-        async function signInWithEmailPassword(email, password) {
+        async function signInWithEmailAndPassword(email, password) {
             try {
                 await signInWithEmailAndPassword(auth, email, password);
                 showNotification(successNotification, 'เข้าสู่ระบบสำเร็จ!');
             } catch (error) {
                 console.error("Error during Email/Password Sign-in:", error);
                 let errorMessage = 'เข้าสู่ระบบไม่สำเร็จ: ';
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    errorMessage += 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                    errorMessage += 'อีเมลหรือรหัสผ่านไม่ถูกต้อง โปรดตรวจสอบ Firebase Console ว่าเปิดใช้งานการยืนยันตัวตนด้วยอีเมล/รหัสผ่านแล้ว';
                 } else if (error.code === 'auth/invalid-email') {
                     errorMessage += 'รูปแบบอีเมลไม่ถูกต้อง';
                 } else {
@@ -2337,7 +2342,7 @@
                 signUpEmailPasswordButton.addEventListener('click', () => {
                     const email = emailInput.value;
                     const password = passwordInput.value;
-                    signUpWithEmailPassword(email, password);
+                    signUpWithEmailAndPassword(email, password);
                 });
             }
             if (signOutButton) {
@@ -2350,6 +2355,63 @@
 
         // This function will be called once the DOM is fully loaded.
         document.addEventListener('DOMContentLoaded', async function() {
+            // Service Worker Registration
+            if ('serviceWorker' in navigator) {
+                let newWorker;
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => {
+                        console.log('Service Worker Registered');
+
+                        reg.addEventListener('updatefound', () => {
+                            // A new service worker has appeared in reg.installing!
+                            newWorker = reg.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                // Has network.state changed?
+                                if (newWorker.state === 'installed') {
+                                    if (navigator.serviceWorker.controller) {
+                                        // new update available
+                                        console.log('New content available, please refresh.');
+                                        updateNotification.classList.remove('translate-y-full', 'hidden');
+                                        updateNotification.classList.add('translate-y-0');
+                                    } else {
+                                        // Content is cached for offline use.
+                                        console.log('Content is cached for offline use.');
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed: ตรวจสอบว่าไฟล์ service-worker.js อยู่ใน root directory ของคุณ และไม่มีข้อผิดพลาดในไฟล์นั้น', error);
+                    });
+
+                // Listen for messages from the service worker
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    if (event.data && event.data.type === 'RELOAD_APP') {
+                        window.location.reload();
+                    }
+                });
+
+                // Event listener for the refresh button in the update notification
+                refreshAppButton.addEventListener('click', () => {
+                    if (newWorker) {
+                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                        updateNotification.classList.add('translate-y-full'); // Hide notification
+                        // The service worker will handle the reload after skipping waiting
+                    } else {
+                        window.location.reload(); // Fallback if newWorker is not set
+                    }
+                });
+
+                // Event listener for the close button in the update notification
+                closeUpdateNotification.addEventListener('click', () => {
+                    updateNotification.classList.add('translate-y-full'); // Hide notification
+                    setTimeout(() => {
+                        updateNotification.classList.add('hidden'); // Fully hide after transition
+                    }, 300);
+                });
+            }
+
             // Listen for auth state changes to get userId and fetch user's sheet ID
             onAuthStateChanged(window.auth, async (user) => {
                 const displayUserIdElement = document.getElementById('displayUserId');
@@ -2426,7 +2488,7 @@
                         document.getElementById('signUpEmailPasswordButton').addEventListener('click', () => {
                             const email = document.getElementById('emailInput').value;
                             const password = document.getElementById('passwordInput').value;
-                            signUpWithEmailPassword(email, password);
+                            signUpWithEmailAndPassword(email, password);
                         });
                     }
 

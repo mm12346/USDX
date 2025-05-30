@@ -6,6 +6,11 @@
     <title>X - Personal Stock Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/nas-manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="X-Stock">
+    <link rel="apple-touch-icon" href="/icons/stock-icon-192x192.png">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -160,8 +165,13 @@
 
     <main id="mainContent" class="flex-grow main-content p-0 sm:p-4 bg-white">
         <section id="summaryView" class="hidden h-full flex flex-col">
-            <div class="flex-grow p-4 bg-gray-900 overflow-y-auto"> 
-                <h1 class="text-2xl font-bold mb-6 text-gray-100">สรุปภาพรวมการลงทุน</h1>
+            <div class="flex-grow p-4 bg-gray-900 overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl font-bold text-gray-100">สรุปภาพรวมการลงทุน</h1>
+                    <button onclick="window.location.href='index.html'" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150">
+                        จัดการ USD
+                    </button>
+                </div>
                 <div id="summaryDashboard" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                     <div class="summary-card">
                         <p class="summary-card-title">กำลังโหลดข้อมูล...</p>
@@ -191,32 +201,39 @@
             <form id="recordForm" class="space-y-4">
                 <div>
                     <label for="recordDate" class="block text-sm font-medium text-slate-700">วันที่ซื้อ:</label>
-                    <input type="date" id="recordDate" name="date" required class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <input type="date" id="recordDate" name="date" required
+                        class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
                     <label for="recordStockSymbol" class="block text-sm font-medium text-slate-700">ชื่อหุ้น (Symbol):</label>
-                    <input type="text" id="recordStockSymbol" name="stockSymbol" placeholder="เช่น AAPL" required class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" id="recordStockSymbol" name="stockSymbol" placeholder="เช่น AAPL" required
+                        class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
                     <label for="recordQuantity" class="block text-sm font-medium text-slate-700">จำนวนหุ้น:</label>
-                    <input type="number" id="recordQuantity" name="quantity" step="any" placeholder="10" required class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <input type="number" id="recordQuantity" name="quantity" step="any" placeholder="10" required
+                        class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
                     <label for="recordTotalTHB" class="block text-sm font-medium text-slate-700">เงินบาทรวม (สำหรับรายการนี้):</label>
-                    <input type="number" id="recordTotalTHB" name="totalTHB" step="any" placeholder="50000" required class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <input type="number" id="recordTotalTHB" name="totalTHB" step="any" placeholder="50000" required
+                        class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
                     <label for="recordUsdRate" class="block text-sm font-medium text-slate-700">Rate THB/USD (ณ วันซื้อ, ถ้ามี):</label>
-                    <input type="number" id="recordUsdRate" name="usdExchangeRateAtPurchase" step="any" placeholder="35.50" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <input type="number" id="recordUsdRate" name="usdExchangeRateAtPurchase" step="any" placeholder="35.50"
+                        class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150">บันทึกรายการ</button>
+                <button type="submit"
+                    class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150">บันทึกรายการ</button>
             </form>
         </section>
 
         <section id="historyView" class="hidden p-4">
             <h1 class="text-2xl font-bold mb-4 text-slate-700">ประวัติการซื้อ</h1>
             <div class="mb-4">
-                <input type="text" id="historySearchInput" placeholder="ค้นหาตามชื่อหุ้นหรือวันที่ (YYYY-MM-DD)" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <input type="text" id="historySearchInput" placeholder="ค้นหาตามชื่อหุ้นหรือวันที่ (YYYY-MM-DD)"
+                    class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
             </div>
             <div id="historyTableContainer" class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-200 border border-slate-300 rounded-md shadow">
@@ -242,7 +259,8 @@
             <form id="settingsForm" class="space-y-6">
                 <div>
                     <label for="settingsSheetId" class="block text-sm font-medium text-slate-700">Sheet ID (Google Sheets - จำลอง):</label>
-                    <input type="text" id="settingsSheetId" name="sheetId" placeholder="กรอก Sheet ID ของคุณ" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" id="settingsSheetId" name="sheetId" placeholder="กรอก Sheet ID ของคุณ"
+                        class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div class="border-t border-slate-200 pt-4">
                     <h2 class="text-lg font-semibold mb-2 text-slate-700">Rate เป้าหมายของหุ้นแต่ละตัว (THB/หุ้น):</h2>
@@ -250,9 +268,12 @@
                         <p class="text-sm text-slate-500">ยังไม่มีการตั้งค่า Rate เป้าหมาย</p>
                     </div>
                     <div class="mt-2 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                        <input type="text" id="newTargetStockSymbol" placeholder="ชื่อหุ้น (Symbol)" class="w-full sm:w-1/2 p-2 border border-slate-300 rounded-md shadow-sm">
-                        <input type="number" id="newTargetStockRate" placeholder="Rate เป้าหมาย (THB)" class="w-full sm:w-1/2 p-2 border border-slate-300 rounded-md shadow-sm">
-                        <button type="button" id="addStockTargetRateBtn" class="w-full sm:w-auto bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-3 rounded-md shadow-sm">เพิ่ม</button>
+                        <input type="text" id="newTargetStockSymbol" placeholder="ชื่อหุ้น (Symbol)"
+                            class="w-full sm:w-1/2 p-2 border border-slate-300 rounded-md shadow-sm">
+                        <input type="number" id="newTargetStockRate" placeholder="Rate เป้าหมาย (THB)"
+                            class="w-full sm:w-1/2 p-2 border border-slate-300 rounded-md shadow-sm">
+                        <button type="button" id="addStockTargetRateBtn"
+                            class="w-full sm:w-auto bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-3 rounded-md shadow-sm">เพิ่ม</button>
                     </div>
                 </div>
                 <div class="border-t border-slate-200 pt-4">
@@ -261,12 +282,16 @@
                         <p class="text-sm text-slate-500">ยังไม่มีการตั้งค่า Rate แลกเปลี่ยนเป้าหมาย</p>
                     </div>
                     <div class="mt-2 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                        <input type="text" id="newTargetStockSymbolUsd" placeholder="ชื่อหุ้น (Symbol)" class="w-full sm:w-1/2 p-2 border border-slate-300 rounded-md shadow-sm">
-                        <input type="number" id="newTargetUsdRate" placeholder="Rate เป้าหมาย (THB/USD)" step="any" class="w-full sm:w-1/2 p-2 border border-slate-300 rounded-md shadow-sm">
-                        <button type="button" id="addStockTargetUsdRateBtn" class="w-full sm:w-auto bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-3 rounded-md shadow-sm">เพิ่ม</button>
+                        <input type="text" id="newTargetStockSymbolUsd" placeholder="ชื่อหุ้น (Symbol)"
+                            class="w-full sm:w-1/2 p-2 border border-slate-300 rounded-md shadow-sm">
+                        <input type="number" id="newTargetUsdRate" placeholder="Rate เป้าหมาย (THB/USD)" step="any"
+                            class="w-full sm:w-1/2 p-2 border border-slate-300 rounded-md shadow-sm">
+                        <button type="button" id="addStockTargetUsdRateBtn"
+                            class="w-full sm:w-auto bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-3 rounded-md shadow-sm">เพิ่ม</button>
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150">บันทึกการตั้งค่า</button>
+                <button type="submit"
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150">บันทึกการตั้งค่า</button>
             </form>
         </section>
     </main>
@@ -313,7 +338,7 @@
 
     <script>
         // --- Application State & Data ---
-        let transactions = []; 
+        let transactions = [];
         let settings = {
             sheetId: '',
             targetCurrency: 'THB', // Default to THB, no longer user configurable via input
@@ -413,6 +438,19 @@
                 if (event.target == tradingViewFullscreenModal) closeTradingViewFullscreen();
             });
             document.getElementById('recordDate').valueAsDate = new Date();
+
+            // Service Worker Registration for nas.html
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/nas-service-worker.js')
+                        .then(registration => {
+                            console.log('nas-service-worker registered:', registration);
+                        })
+                        .catch(error => {
+                            console.error('nas-service-worker registration failed:', error);
+                        });
+                });
+            }
         });
 
         // --- Navigation ---
@@ -450,9 +488,9 @@
             settings = {
                 sheetId: 'mockSheetId123',
                 targetCurrency: 'THB', // Defaulted
-                stockTargetRates: { 
-                    'AAPL': (170 * 34.5), 
-                    'MSFT': (300 * 34.5), 
+                stockTargetRates: {
+                    'AAPL': (170 * 34.5),
+                    'MSFT': (300 * 34.5),
                     'GOOGL': (120 * 34.5),
                     'TSLA': (200 * 34.5)
                 },
@@ -464,7 +502,7 @@
                 }
             };
             // Reset color map for mock data consistency
-            stockColorMap = {}; 
+            stockColorMap = {};
             nextColorIndex = 0;
             console.log("Mock data loaded for summary view.");
         }
@@ -475,7 +513,7 @@
                  localStorage.setItem('stockTrackerSettings', JSON.stringify(settings));
                  localStorage.setItem('stockTrackerColorMap', JSON.stringify(stockColorMap)); // Save color map
                  localStorage.setItem('stockTrackerNextColorIndex', nextColorIndex.toString()); // Save next color index
-                 useMockData = false; 
+                 useMockData = false;
             }
         }
 
@@ -525,8 +563,8 @@
             const symbol = tvSymbolInput.value.trim().toUpperCase() || 'AAPL';
             currentTradingViewSymbol = symbol;
             const widgetHtml = `
-                <iframe 
-                    id="tradingview-iframe" style="width: 100%; height: 100%;" frameborder="0" allowtransparency="true" scrolling="no" 
+                <iframe
+                    id="tradingview-iframe" style="width: 100%; height: 100%;" frameborder="0" allowtransparency="true" scrolling="no"
                     src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${symbol}&interval=D&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=light&style=1&timezone=Asia%2FBangkok&locale=th&utm_source=localhost&utm_medium=widget_new&utm_campaign=chart&utm_term=${symbol}">
                 </iframe>`;
             tradingViewWidgetContainer.innerHTML = widgetHtml;
@@ -539,7 +577,7 @@
             }
             const symbolToLoad = currentTradingViewSymbol || tvSymbolInput.value.trim().toUpperCase() || 'AAPL';
              const fullscreenWidgetHtml = `
-                <iframe style="width: 100%; height: 100%;" frameborder="0" allowtransparency="true" scrolling="no" 
+                <iframe style="width: 100%; height: 100%;" frameborder="0" allowtransparency="true" scrolling="no"
                     src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_fullscreen_widget&symbol=${symbolToLoad}&interval=D&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=light&style=1&timezone=Asia%2FBangkok&enabled_features=['header_fullscreen_button']&locale=th&utm_source=localhost&utm_medium=widget_new&utm_campaign=chart&utm_term=${symbolToLoad}">
                 </iframe>`;
             tradingViewFullscreenContent.innerHTML = fullscreenWidgetHtml;
@@ -557,7 +595,7 @@
         function handleRecordSubmit(event) {
             event.preventDefault();
             if (useMockData && transactions.every(tx => tx.id.startsWith('mock'))) {
-                transactions = []; 
+                transactions = [];
                 useMockData = false;
                 stockColorMap = {}; // Reset color map when real data starts
                 nextColorIndex = 0;
@@ -659,9 +697,9 @@
             document.getElementById('recordTotalTHB').value = transactionToEdit.totalTHB;
             document.getElementById('recordUsdRate').value = transactionToEdit.usdExchangeRateAtPurchase || '';
             
-            deleteTransaction(transactionId); 
+            deleteTransaction(transactionId);
             showModal(`ข้อมูลของ ${transactionToEdit.stockSymbol} ถูกโหลดในฟอร์มแล้ว กรุณาแก้ไขและกดบันทึกอีกครั้ง (รายการเดิมถูกลบแล้ว)`);
-            navigateTo('recordView'); 
+            navigateTo('recordView');
         }
 
         // --- Settings Form Handling ---
@@ -678,12 +716,12 @@
             // Removed settingsTargetCurrency as per user request
             // settings.targetCurrency = formData.get('targetCurrency');
             saveDataToLocalStorage();
-            renderSummary(); 
+            renderSummary();
             showModal('บันทึกการตั้งค่าเรียบร้อยแล้ว');
         }
 
         function renderStockTargetRates() {
-            stockTargetRatesContainer.innerHTML = ''; 
+            stockTargetRatesContainer.innerHTML = '';
             if (Object.keys(settings.stockTargetRates).length === 0) {
                 stockTargetRatesContainer.innerHTML = '<p class="text-sm text-slate-500">ยังไม่มีการตั้งค่า Rate เป้าหมาย</p>';
                 return;
@@ -721,12 +759,12 @@
         }
 
         function removeStockTargetRate(symbol) {
-            const confirmation = window.prompt(`พิมพ์ '${symbol}' เพื่อยืนยันการลบ Rate เป้าหมายนี้:`); 
+            const confirmation = window.prompt(`พิมพ์ '${symbol}' เพื่อยืนยันการลบ Rate เป้าหมายนี้:`);
             if (confirmation === symbol) {
                 delete settings.stockTargetRates[symbol];
                 saveDataToLocalStorage();
                 renderStockTargetRates();
-                renderSummary(); 
+                renderSummary();
                 showModal(`ลบ Rate เป้าหมายสำหรับ ${symbol} เรียบร้อยแล้ว`);
             } else if (confirmation !== null) {
                 showModal("การลบถูกยกเลิก คำยืนยันไม่ถูกต้อง");
@@ -734,7 +772,7 @@
         }
 
         function renderStockTargetExchangeRates() {
-            stockTargetExchangeRatesContainer.innerHTML = ''; 
+            stockTargetExchangeRatesContainer.innerHTML = '';
             if (Object.keys(settings.stockTargetExchangeRates).length === 0) {
                 stockTargetExchangeRatesContainer.innerHTML = '<p class="text-sm text-slate-500">ยังไม่มีการตั้งค่า Rate แลกเปลี่ยนเป้าหมาย</p>';
                 return;
@@ -772,12 +810,12 @@
         }
 
         function removeStockTargetUsdRate(symbol) {
-            const confirmation = window.prompt(`พิมพ์ '${symbol}' เพื่อยืนยันการลบ Rate แลกเปลี่ยนเป้าหมายนี้:`); 
+            const confirmation = window.prompt(`พิมพ์ '${symbol}' เพื่อยืนยันการลบ Rate แลกเปลี่ยนเป้าหมายนี้:`);
             if (confirmation === symbol) {
                 delete settings.stockTargetExchangeRates[symbol];
                 saveDataToLocalStorage();
                 renderStockTargetExchangeRates();
-                renderSummary(); 
+                renderSummary();
                 showModal(`ลบ Rate แลกเปลี่ยนเป้าหมายสำหรับ ${symbol} เรียบร้อยแล้ว`);
             } else if (confirmation !== null) {
                 showModal("การลบถูกยกเลิก คำยืนยันไม่ถูกต้อง");
@@ -786,8 +824,8 @@
 
         // --- Summary Calculation and Rendering (Updated for new design) ---
         function renderSummary() {
-            summaryDashboard.innerHTML = ''; 
-            summaryStockDetails.innerHTML = ''; 
+            summaryDashboard.innerHTML = '';
+            summaryStockDetails.innerHTML = '';
             // Filter transactions to display only real data if not using mock data
             const currentTransactionsToDisplay = (useMockData && transactions.every(tx => tx.id.startsWith('mock'))) ? transactions : transactions.filter(tx => !tx.id.startsWith('mock'));
 
@@ -875,7 +913,7 @@
                 stockItemContainer.className = 'stock-list-item-container mb-3'; // Add margin here
 
                 const stockDiv = document.createElement('div');
-                stockDiv.className = 'stock-list-item'; 
+                stockDiv.className = 'stock-list-item';
                 stockDiv.innerHTML = `
                     <div class="stock-icon-placeholder ${iconColor}">
                         ${symbol.charAt(0)}
@@ -969,9 +1007,9 @@
                  const currentAvgCost = currentShares > 0 ? currentTotalCost / currentShares : 0;
                  if (Math.abs(currentAvgCost - targetAvgPrice) < 0.001) {
                     message = `<p class="text-green-600">ต้นทุนเฉลี่ยปัจจุบันของคุณอยู่ที่ประมาณ Rate เป้าหมายแล้ว (${currentAvgCost.toLocaleString(undefined, {minimumFractionDigits: 2})} ${settings.targetCurrency}).</p>`;
-                 } else if (targetAvgPrice > currentAvgCost && marketPrice < targetAvgPrice) { 
-                    message = `<p class="text-orange-500">Rate เป้าหมาย (${targetAvgPrice.toLocaleString(undefined, {minimumFractionDigits: 2})}) สูงกว่าต้นทุนเฉลี่ยปัจจุบัน แต่ราคาตลาด (${marketPrice.toLocaleString(undefined, {minimumFractionDigits: 2})}) ต่ำกว่า Rate เป้าหมาย การซื้อที่ราคานี้จะทำให้ต้นทุนเฉลี่ยต่ำลง/เข้าใกล้ราคาตลาด</p>`;
-                 } else if (targetAvgPrice < currentAvgCost && marketPrice > targetAvgPrice) { 
+                 } else if (targetAvgPrice > currentAvgCost && marketPrice < targetAvgPrice) {
+                    message = `<p class="text-orange-500">Rate เป้าหมาย (${targetAvgPrice.toLocaleString(undefined, {minimumFractionDigits: 2})}) สูงกว่าต้นทุนเฉลี่ยปัจจุบัน แต่ราคาตลาด (${marketPrice.toLocaleString(undefined, {minimumFractionDigits: 2})}) ต่ำกว่า Rate เป้าหมาย การซื้อที่ราคานี้จะทำให้ต้นทุนเฉลี่ยต่ำลง/เข้าใกล้ราคาตลาด</p`;
+                 } else if (targetAvgPrice < currentAvgCost && marketPrice > targetAvgPrice) {
                     message = `<p class="text-orange-500">Rate เป้าหมาย (${targetAvgPrice.toLocaleString(undefined, {minimumFractionDigits: 2})}) ต่ำกว่าต้นทุนเฉลี่ยปัจจุบัน แต่ราคาตลาด (${marketPrice.toLocaleString(undefined, {minimumFractionDigits: 2})}) สูงกว่า Rate เป้าหมาย การซื้อที่ราคานี้จะทำให้ต้นทุนเฉลี่ยสูงขึ้น/เข้าใกล้ราคาตลาด</p>`;
                  }
                  else {

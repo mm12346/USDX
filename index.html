@@ -897,7 +897,7 @@
             apiKey: "AIzaSyB9xHmmBOgq6NLncJNk0tBsygjsmhKqA4c",
             authDomain: "usd-tracker-app.firebaseapp.com",
             projectId: "usd-tracker-app",
-            storageBucket: "usd-tracker-app.firebasestorage.app",
+            storageBucket: "usd-tracker-app.firebaseapp.com",
             messagingSenderId: "243448319635",
             appId: "1:243448319635:web:95a3d5b01bcb53d68a4766"
         };
@@ -2404,6 +2404,14 @@
                 fetchSummary(); // Reload summary data (which will also trigger monthly data fetch)
             });
 
+            // Click listener for "Manage Stocks" button
+            const manageStocksButton = document.getElementById('manageStocksButton');
+            if (manageStocksButton) {
+                manageStocksButton.addEventListener('click', function() {
+                    window.location.href = 'nas.html'; // Navigate to nas.html
+                });
+            }
+
 
             // Function to set the theme
             function setTheme(isDark) {
@@ -2567,7 +2575,7 @@
                 updateNotification.classList.add('hidden');
                 updateNotification.classList.add('translate-y-full');
             }
-
+            
             // Service Worker Registration
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
@@ -2609,7 +2617,7 @@
                     }
                 });
             }
-
+            
             // Listen for auth state changes to get userId and fetch user's sheet ID
             onAuthStateChanged(window.auth, async (user) => {
                 const displayUserIdElement = document.getElementById('displayUserId');
@@ -2687,12 +2695,21 @@
                 <div class="container">
                     <div class="flex justify-between items-center mb-6 py-2">
                         <h2 class="text-xl sm:text-2xl font-bold text-gray-100">สรุปข้อมูล</h2>
-                        <button id="refreshSummaryButton" class="text-blue-400 hover:text-blue-300 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            รีเฟรช
-                        </button>
+                        <div class="flex items-center space-x-2">
+                            <button id="manageStocksButton" class="text-blue-400 hover:text-blue-300 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                จัดการหุ้น
+                            </button>
+                            <button id="refreshSummaryButton" class="text-blue-400 hover:text-blue-300 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                รีเฟรช
+                            </button>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
@@ -2933,7 +2950,7 @@
                             <div class="p-4 border border-gray-700 rounded-md">
                                 <div class="flex justify-between items-center">
                                     <span class="font-medium text-gray-100">เวอร์ชัน</span>
-                                    <span class="text-gray-400">1.0.6</span>
+                                    <span class="text-gray-400">1.0.8</span>
                                 </div>
                             </div>
 
@@ -3036,7 +3053,7 @@
                     </button>
                 </div>
             </div>
-            <p class="login-version text-center">V 1.0.7</p>
+            <p class="login-version text-center">V 1.0.8</p>
         </div>
     </div>
 

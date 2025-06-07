@@ -224,6 +224,12 @@
             color: #2cd416; /* Yellow-400 for highlights */
         }
 
+        .highlightrad-value {
+            font-size: clamp(1rem, 4vw, 1.125rem); /* text-lg on small, text-lg on larger */
+            font-weight: 600; /* font-semibold */
+            color: #f1870d; /* Yellow-400 for highlights */
+        }
+
         .profit-value {
             color: #10B981; /* Green for profit */
         }
@@ -1604,7 +1610,7 @@
                     </label>
                 </div>
                 <h3 class="card-title">ยอดรวม(ปัจจุบัน)</h3>
-                <p class="card-status">สถานะ: ปัจจุบัน</p>
+                <p class="card-status">สถานะ: ปัจจุบัน </p>
                 <div class="flex-grow"></div><div class="summary-item">
                     <div class="summary-label">รวม ฿</div>
                     
@@ -1613,6 +1619,10 @@
                 <div class="summary-item">
                     <div class="summary-label">รวม ($)</div>
                 <div class="highlightgreen-value">${formatCurrency(summary.totalUSD, '$')}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">ปันผล(ไม่รวมกับUSDจากการซื้อขาย)</div>
+                <div class="highlightrad-value">${formatCurrency(summary.totalDividend, '$')}</div>
                 </div>
                  `;
                 // เพิ่ม toggle เหมือนการ์ดอื่น
@@ -2577,33 +2587,62 @@
             try {
                 const response = await fetch(API_URL, { method: 'POST', body: formData });
                 const data = await response.json();
+
+                // --- ดึงข้อมูลปันผล ---
+                const dividendFormData = new FormData();
+                 dividendFormData.append('action', 'getDividendRecords');
+                 dividendFormData.append('sheetId', window.userSheetId);
+                 const dividendResponse = await fetch(API_URL, { method: 'POST', body: dividendFormData });
+                 const dividendData = await dividendResponse.json();
+
+                let allRecords = [];
                 if (data.success && Array.isArray(data.records)) {
-                    stockTransactions = data.records; 
-                    calculateCurrentHoldings(); // NEW: Calculate holdings after fetching transactions
-                    stockRenderHistoryList(searchTerm); // Changed to stockRenderHistoryList
-                    populateStockSellSymbolDropdown(); // NEW: Populate dropdown after holdings are calculated
-                    populateDividendStockList();
-                } else {
-                    stockHistoryList.innerHTML = '<p class="text-gray-500 text-center py-4">ไม่พบประวัติการซื้อขายหุ้น</p>';
+                    allRecords = data.records;
                 }
-            } catch (error) {
+                if (dividendData.success && Array.isArray(dividendData.records)) {
+                     allRecords = allRecords.concat(dividendData.records);
+                }
+
+                stockTransactions = allRecords;
+                calculateCurrentHoldings();
+                stockRenderHistoryList(searchTerm);
+                populateStockSellSymbolDropdown();
+                populateDividendStockList();
+          } catch (error) {
                 console.error('Error fetching stock history:', error);
-                stockHistoryList.innerHTML = `<p class="text-red-500 text-center py-4">ไม่สามารถโหลดประวัติหุ้นได้: ${error.message}</p>`;
-            }
-        }
+                 stockHistoryList.innerHTML = `<p class="text-red-500 text-center py-4">ไม่สามารถโหลดประวัติหุ้นได้: ${error.message}</p>`;
+          }
+      }
+
+
 
         function stockRenderHistoryList(searchTerm = '') { // Changed function name
             if (!stockHistoryList) return; // Changed from stockHistoryTableBody
             stockHistoryList.innerHTML = '';
             closeActiveSwipeItem(); // Close any active swipe items
 
+            const searchLower = String(searchTerm || '').toLowerCase();//ป้องกันเออเร่อ
+
             const displayTransactions = stockTransactions.filter(tx => {
-                const symbol = String(tx.data[2] || '').toLowerCase(); 
-                const date = String(tx.data[0] || '').toLowerCase(); 
-                const type = String(tx.data[1] || '').toLowerCase();
-                const searchLower = searchTerm.toLowerCase();
-                return symbol.includes(searchLower) || date.includes(searchLower) || type.includes(searchLower);
-            }).sort((a, b) => new Date(b.data[8]) - new Date(a.data[8])); 
+                let symbol = '';
+                let date = '';
+                let type = '';
+            if (tx.type === 'dividend') {
+               symbol = String(tx.data[1] || '').toLowerCase();
+               date = String(tx.data[0] || '').toLowerCase();
+               type = 'dividend';
+         } else {
+              symbol = String(tx.data[2] || '').toLowerCase();
+              date = String(tx.data[0] || '').toLowerCase();
+              type = String(tx.data[1] || '').toLowerCase();
+         }
+          return symbol.includes(searchLower) || date.includes(searchLower) || type.includes(searchLower);
+        }).sort((a, b) => {
+        // เรียงจากใหม่สุดไปเก่าสุด
+        const dateA = new Date(a.data[0]);
+        const dateB = new Date(b.data[0]);
+         return dateB - dateA;
+      });
 
             if (displayTransactions.length === 0) {
                 stockHistoryList.innerHTML = '<p class="text-gray-500 text-center py-4">ไม่พบรายการที่ตรงกัน หรือยังไม่มีประวัติการซื้อขาย</p>';
@@ -2615,6 +2654,46 @@
                 const originalRowIndex = tx.rowIndex; 
                 const type = tx.type; 
                 const sheetName = tx.sheetName; 
+
+                // --- แสดงปันผล ---
+            if (type === 'dividend') {
+                const displayDate = new Date(record[0]).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+                const stockSymbol = record[1];
+                const amount = parseFloat(record[2]);
+                const tax = parseFloat(record[3]);
+                const net = amount - tax;
+
+                const historyItem = document.createElement('div');
+                historyItem.className = `history-item fade-in dividend`;
+                historyItem.dataset.originalRowIndex = originalRowIndex;
+                historyItem.dataset.sheetName = sheetName;
+                historyItem.innerHTML = `
+                    <div class="swipe-container">
+                        <div class="swipe-content">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-medium">${displayDate} (ปันผล)</span>
+                                <span class="font-semibold">${stockSymbol}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                             <span>รับปันผล: ${amount.toLocaleString(undefined, {minimumFractionDigits: 2})} $</span>
+                                <span>หักภาษี: ${tax.toLocaleString(undefined, {minimumFractionDigits: 2})} $</span>
+                            </div>
+                            <div class="flex justify-between text-sm mt-1 text-green-400">
+                                <span>รับสุทธิ: ${net.toLocaleString(undefined, {minimumFractionDigits: 2})} $</span>
+                            </div>
+                        </div>
+                        <div class="delete-reveal">
+                            <button class="delete-button" data-row-index="${originalRowIndex}" data-sheet-name="${sheetName}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                stockHistoryList.appendChild(historyItem);
+                return; // ข้ามไปแสดงเฉพาะปันผล
+                }
 
                 const displayDate = new Date(record[0]).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
                 const stockSymbol = record[2];
@@ -3068,6 +3147,16 @@
             let totalUnrealizedProfitLossTHB = 0;
             let totalRealizedStockProfitLossTHB = 0; // For "กำไรจากการขายสะสม" (stock specific)
 
+            // รวมยอดปันผลสุทธิ (amount - tax)
+            let totalDividendUSD = 0;
+                stockTransactions.forEach(tx => {
+            if (tx.type === 'dividend') {
+                 const amount = parseFloat(tx.data[2]) || 0;
+                 const tax = parseFloat(tx.data[3]) || 0;
+                 totalDividendUSD += (amount - tax);
+                }   
+            });
+
             const stocksData = {}; // This will store aggregated data for each stock symbol
             stockTransactions.forEach(tx => {
                 const record = tx.data;
@@ -3191,6 +3280,7 @@
                 <div class="stock-summary-card bg-blue-400 md:col-span-2">
                     <p class="stock-summary-card-title">กำไรจากการขายสะสม</p>
                     <p class="stock-summary-card-value">${(totalRealizedStockProfitLossTHB / currentOverallRate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} $</p>
+                    <p class="stock-summary-card-rate">ปันผลไม่รวมกำไร: ${(summaryData && summaryData.totalDividend ? summaryData.totalDividend : 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} $</p>
                     <p class="stock-summary-card-rate">Rate : ${currentOverallRate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} <span class="stock-summary-card-rate-baht">(${totalRealizedStockProfitLossTHB.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ฿)</span></p>
                 </div>
             `;
@@ -3235,15 +3325,15 @@
                         </div>
                         <div class="stock-details-group">
                             <div class="flex justify-between text-base">
-                                <span class="stock-detail-label">ราคา ทุน / หุ้น : </span>
+                                <span class="stock-detail-label">ราคาทุน/หุ้น: </span>
                                 <span class="stock-detail-value">${averageCostPerShareUSD.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} $</span>
                             </div>
                             <div class="flex justify-between text-base">
-                                <span class="stock-detail-label">จำนวน หุ้น : </span>
+                                <span class="stock-detail-label">จำนวนหุ้น: </span>
                                 <span class="stock-detail-value">${data.totalShares.toLocaleString(undefined, {minimumFractionDigits: 7})}</span>
                             </div>
                             <div class="flex justify-between text-base">
-                                <span class="stock-detail-label">รวม ทุน : </span>
+                                <span class="stock-detail-label">รวมทุน: </span>
                                 <span class="stock-detail-value">${totalCostForStockUSD.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} $</span>
                             </div>
                         </div>
@@ -3399,6 +3489,18 @@
         }
 
         
+        async function fetchDividendSummary() {
+                const formData = new FormData();
+                formData.append('action', 'getDividendSummary');
+                 formData.append('sheetId', window.userSheetId);
+                const response = await fetch(API_URL, { method: 'POST', body: formData });
+                 const data = await response.json();
+             if (data.success) {
+              // นำ data.totalDividend ไปแสดงในการ์ด
+             document.getElementById('yourDividendCard').textContent = data.totalDividend.toLocaleString(undefined, {minimumFractionDigits: 2});
+    }
+}
+
 
         // NEW: Function to calculate current stock holdings and average exchange rates
         function calculateCurrentHoldings() {
@@ -3953,12 +4055,16 @@
                 const data = await response.json();
                 if (data.success) {
                     dividendFormResult.textContent = 'บันทึกปันผลสำเร็จ';
-                    dividendFormResult.className = 'mt-2 text-center text-sm text-green-500';
-                    dividendForm.reset();
-                } else {
-                    dividendFormResult.textContent = data.message || 'เกิดข้อผิดพลาดในการบันทึก';
-                    dividendFormResult.className = 'mt-2 text-center text-sm text-red-500';
-                }
+                     dividendFormResult.className = 'mt-2 text-center text-sm text-green-500';
+                     dividendForm.reset();
+                setTimeout(() => {
+                     dividendFormResult.textContent = '';
+                    dividendFormResult.className = 'mt-2 text-center text-sm';
+                    }, 2000); // ข้อความจะหายไปหลัง 2 วินาที
+} else {
+    dividendFormResult.textContent = data.message || 'เกิดข้อผิดพลาดในการบันทึก';
+    dividendFormResult.className = 'mt-2 text-center text-sm text-red-500';
+}
                  } catch (error) {
                 dividendFormResult.textContent = 'ไม่สามารถบันทึกข้อมูลได้: ' + error.message;
                 dividendFormResult.className = 'mt-2 text-center text-sm text-red-500';
@@ -4339,7 +4445,7 @@
                     <button id="signUpModalSubmitButton" class="login-button">ลงทะเบียน</button>
                 </div>
             </div>
-            <p class="text-center login-version">เวอร์ชัน 1.1</p>
+            <p class="text-center login-version">เวอร์ชัน 1.0</p>
         </div>
     </div>
 

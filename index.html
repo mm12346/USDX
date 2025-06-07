@@ -4100,8 +4100,7 @@
                 dividendFormResult.className = 'mt-2 text-center text-sm text-red-500';
                 return;
             }
-            dividendFormResult.textContent = 'กำลังบันทึก...';
-            dividendFormResult.className = 'mt-2 text-center text-sm text-gray-400';
+            loadingOverlay.classList.remove('hidden');
             const formData = new FormData();
             formData.append('action', 'saveDividend');
             formData.append('sheetId', window.userSheetId);
@@ -4112,9 +4111,8 @@
             try {
                 const response = await fetch(API_URL, { method: 'POST', body: formData });
                 const data = await response.json();
+                loadingOverlay.classList.add('hidden')
                 if (data.success) {
-                    dividendFormResult.textContent = 'บันทึกปันผลสำเร็จ';
-                     dividendFormResult.className = 'mt-2 text-center text-sm text-green-500';
                      dividendForm.reset();
                       // ตั้งค่าวันที่เป็นวันปัจจุบันหลังบันทึกสำเร็จ
                      const dividendDateInput = document.getElementById('dividendDate');
@@ -4123,17 +4121,18 @@
                     dividendDateInput.value = today;
                     }
                     stockDataChanged = true; // <-- เพิ่มตรงนี้
+                    // --- เพิ่มแจ้งเตือนสีเขียวด้านบน ---
+                    showNotification(successNotification, 'บันทึกปันผลสำเร็จ');
                     setTimeout(() => {
                      dividendFormResult.textContent = '';
                     dividendFormResult.className = 'mt-2 text-center text-sm';
                     }, 2000); // ข้อความจะหายไปหลัง 2 วินาที
                 } else {
-                    dividendFormResult.textContent = data.message || 'เกิดข้อผิดพลาดในการบันทึก';
-                    dividendFormResult.className = 'mt-2 text-center text-sm text-red-500';
+                    howNotification(errorNotification, 'เกิดข้อผิดพลาดในการบันทึก');
                 }   
                  } catch (error) {
-                dividendFormResult.textContent = 'ไม่สามารถบันทึกข้อมูลได้: ' + error.message;
-                dividendFormResult.className = 'mt-2 text-center text-sm text-red-500';
+                loadingOverlay.classList.add('hidden'); // <-- ต้องใช้ add('hidden') เช่นกัน
+                howNotification(errorNotification, 'ไม่สามารถบันทึกข้อมูลได้: ' + error.message);
                 }
              });
          }
@@ -4498,7 +4497,7 @@
                     <button id="signUpModalSubmitButton" class="login-button">ลงทะเบียน</button>
                 </div>
             </div>
-            <p class="text-center login-version">เวอร์ชัน 1.4</p>
+            <p class="text-center login-version">เวอร์ชัน 1.5</p>
         </div>
     </div>
 

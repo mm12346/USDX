@@ -1,4 +1,4 @@
-const CACHE_NAME = 'usd-stock-cache-v1.1.0';
+const CACHE_NAME = 'usd-stock-cache-v1.1';
 const urlsToCache = [
   '/',
   '/index.html',

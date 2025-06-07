@@ -2582,6 +2582,7 @@
                     calculateCurrentHoldings(); // NEW: Calculate holdings after fetching transactions
                     stockRenderHistoryList(searchTerm); // Changed to stockRenderHistoryList
                     populateStockSellSymbolDropdown(); // NEW: Populate dropdown after holdings are calculated
+                    populateDividendStockList();
                 } else {
                     stockHistoryList.innerHTML = '<p class="text-gray-500 text-center py-4">ไม่พบประวัติการซื้อขายหุ้น</p>';
                 }
@@ -3397,6 +3398,8 @@
             }
         }
 
+        
+
         // NEW: Function to calculate current stock holdings and average exchange rates
         function calculateCurrentHoldings() {
             currentStockHoldings = {};
@@ -3900,6 +3903,87 @@
         }
 
 
+
+        // --- Dividend Form Logic ---
+        function populateDividendStockList() {
+             const select = document.getElementById('dividendStockSymbol');
+         if (!select) return;
+             select.innerHTML = '<option value="">เลือกหุ้น</option>';
+        // ใช้ currentStockHoldings ที่คำนวณไว้แล้ว
+        const symbols = Object.keys(currentStockHoldings).sort();
+        symbols.forEach(symbol => {
+        const option = document.createElement('option');
+        option.value = symbol;
+        option.textContent = symbol;
+        select.appendChild(option);
+             });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+        const dividendForm = document.getElementById('dividendForm');
+         const dividendFormResult = document.getElementById('dividendFormResult');
+         if (dividendForm) {
+          dividendForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const date = document.getElementById('dividendDate').value;
+            const symbol = document.getElementById('dividendStockSymbol').value;
+            const amount = parseFloat(document.getElementById('dividendAmount').value);
+            const tax = parseFloat(document.getElementById('dividendTax').value);
+            if (!date || !symbol || isNaN(amount) || amount <= 0 || isNaN(tax) || tax < 0) {
+                dividendFormResult.textContent = 'กรุณากรอกข้อมูลให้ครบถ้วน';
+                dividendFormResult.className = 'mt-2 text-center text-sm text-red-500';
+                return;
+            }
+            if (!window.userSheetId) {
+                dividendFormResult.textContent = 'กรุณาตั้งค่า Google Sheet ID ก่อน';
+                dividendFormResult.className = 'mt-2 text-center text-sm text-red-500';
+                return;
+            }
+            dividendFormResult.textContent = 'กำลังบันทึก...';
+            dividendFormResult.className = 'mt-2 text-center text-sm text-gray-400';
+            const formData = new FormData();
+            formData.append('action', 'saveDividend');
+            formData.append('sheetId', window.userSheetId);
+            formData.append('date', date);
+            formData.append('stockSymbol', symbol);
+            formData.append('amount', amount);
+            formData.append('tax', tax);
+            try {
+                const response = await fetch(API_URL, { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.success) {
+                    dividendFormResult.textContent = 'บันทึกปันผลสำเร็จ';
+                    dividendFormResult.className = 'mt-2 text-center text-sm text-green-500';
+                    dividendForm.reset();
+                } else {
+                    dividendFormResult.textContent = data.message || 'เกิดข้อผิดพลาดในการบันทึก';
+                    dividendFormResult.className = 'mt-2 text-center text-sm text-red-500';
+                }
+                 } catch (error) {
+                dividendFormResult.textContent = 'ไม่สามารถบันทึกข้อมูลได้: ' + error.message;
+                dividendFormResult.className = 'mt-2 text-center text-sm text-red-500';
+                }
+             });
+         }
+             const stockNavItems = document.querySelectorAll('.stock-nav-item');
+             stockNavItems.forEach(item => {
+             item.addEventListener('click', function() {
+            if (this.dataset.stockView === 'stockSettingsView') {
+                populateDividendStockList();
+                // ตั้งค่าวันที่เป็นวันปัจจุบันทุกครั้งที่เข้า view นี้
+                const dividendDateInput = document.getElementById('dividendDate');
+                if (dividendDateInput) {
+                    const today = new Date().toISOString().split('T')[0];
+                    dividendDateInput.value = today;
+                     }
+                }
+                });
+            });
+        });
+
+
+
+
         // Function to navigate between internal stock views
         function stockNavigateTo(viewId) {
             if (!stockViews) { console.error("stockViews is not initialized yet."); return; }
@@ -4094,7 +4178,7 @@
                         <button data-stock-view="stockSummaryView" class="stock-nav-item flex-1 flex flex-col items-center justify-center p-2 transition duration-150 active"><span class="text-xs">สรุป</span></button>
                         <button data-stock-view="stockRecordView" class="stock-nav-item flex-1 flex flex-col items-center justify-center p-2 transition duration-150"><span class="text-xs">บันทึก</span></button>
                         <button data-stock-view="stockHistoryView" class="stock-nav-item flex-1 flex flex-col items-center justify-center p-2 transition duration-150"><span class="text-xs">ประวัติ</span></button>
-                        <button data-stock-view="stockSettingsView" class="stock-nav-item flex-1 flex flex-col items-center justify-center p-2 transition duration-150"><span class="text-xs">ตั้งค่า</span></button>
+                        <button data-stock-view="stockSettingsView" class="stock-nav-item flex-1 flex flex-col items-center justify-center p-2 transition duration-150"><span class="text-xs">บันทึกปันผล</span></button>
                     </nav>
                     <div class="flex-grow overflow-y-auto rounded-b-lg shadow-lg p-4 stock-content-bg">
                         <section id="stockSummaryView">
@@ -4154,10 +4238,30 @@
                                 </div>
                         </section>
                         <section id="stockSettingsView" class="hidden">
-                            <h2 class="text-xl sm:text-2xl font-bold text-gray-100 mb-6 text-center">ตั้งค่าหุ้น</h2>
+                            <h2 class="text-xl sm:text-2xl font-bold text-gray-100 mb-6 text-center">บันทึกข้อมูลรายได้ปันผล</h2>
                             <div class="stock-settings-card bg-[#2C2C2E] p-6 rounded-xl shadow-lg space-y-4 border border-gray-700">
-                                <h3 class="text-lg font-semibold text-gray-100 mb-4">การตั้งค่าทั่วไป</h3>
-                                <div><label for="stockSettingsSheetId" class="block text-sm font-medium text-gray-300 mb-1">Google Sheet ID:</label><input type="text" id="stockSettingsSheetId" placeholder="Sheet ID" class="stock-form-input w-full p-3" readonly><p class="text-xs text-gray-400 mt-1">สามารถตั้งค่า Sheet ID ได้ที่หน้า "ตั้งค่า" ของ USD</p></div>
+                              <form id="dividendForm" class="space-y-4">
+                                <div>
+                                  <label for="dividendDate" class="block text-sm font-medium text-gray-300 mb-1">วันที่:</label>
+                                  <input type="date" id="dividendDate" class="stock-form-input w-full p-3" required>
+                                </div>
+                                <div>
+                                 <label for="dividendStockSymbol" class="block text-sm font-medium text-gray-300 mb-1">ชื่อหุ้น:</label>
+                                    <select id="dividendStockSymbol" class="stock-form-input w-full p-3" required>
+                                    <option value="">เลือกหุ้น</option>
+                                </select>
+                                </div>
+                                 <div>
+                                    <label for="dividendAmount" class="block text-sm font-medium text-gray-300 mb-1">จำนวนเงินปันผล (USD):</label>
+                                    <input type="number" id="dividendAmount" step="0.01" min="0.01" class="stock-form-input w-full p-3" required>
+                                 </div>
+                                 <div>
+                                    <label for="dividendTax" class="block text-sm font-medium text-gray-300 mb-1">หักภาษี (USD):</label>
+                                    <input type="number" id="dividendTax" step="0.01" min="0" class="stock-form-input w-full p-3" required>
+                                </div>
+                                    <button type="submit" class="form-button w-full">บันทึกปันผล</button>
+                                    </form>
+                                 <div id="dividendFormResult" class="mt-2 text-center text-sm"></div>
                             </div>
                         </section>
                     </div>
@@ -4235,7 +4339,7 @@
                     <button id="signUpModalSubmitButton" class="login-button">ลงทะเบียน</button>
                 </div>
             </div>
-            <p class="text-center login-version">เวอร์ชัน 1.0</p>
+            <p class="text-center login-version">เวอร์ชัน 1.1</p>
         </div>
     </div>
 
@@ -4325,10 +4429,9 @@ if ('serviceWorker' in navigator) {
             .then(reg => console.log('Service Worker registered:', reg))
             .catch(err => console.log('Service Worker registration failed:', err));
     });
-}
-
+} 
 </script>
-</body>
+
 </body>
 </html>
 

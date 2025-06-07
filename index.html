@@ -3978,6 +3978,7 @@
                 item.addEventListener('click', async function() {
                         const viewId = this.dataset.stockView;
                 if (viewId === 'stockSettingsView') {
+                    stockNavigateTo(viewId);
                   await stockFetchAndRenderHistoryIfNeeded();
                   updateDividendDropdownIfNeeded();
                   // ตั้งค่าวันที่เป็นวันปัจจุบัน
@@ -3986,11 +3987,11 @@
                 const today = new Date().toISOString().split('T')[0];
                 dividendDateInput.value = today;
                  }
-                 stockNavigateTo(viewId);
+                 
                 } else if (viewId === 'stockRecordView') {
+                    stockNavigateTo(viewId);
                  await stockFetchAndRenderHistoryIfNeeded();
                  updateSellDropdownIfNeeded();
-                 stockNavigateTo(viewId);
                  } else {
                  stockNavigateTo(viewId);
                 }

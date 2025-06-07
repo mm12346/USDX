@@ -940,7 +940,7 @@
         body.light-theme .stock-content-bg {
             background-color: #F3F4F6; /* Light background for content */
         }
-
+        
         /* Stock Summary Cards (New Styles based on image) */
         .stock-summary-card {
             display: flex;
@@ -2342,6 +2342,7 @@
         let stockSellModalPricePerShareInput;
         let stockSellModalSubmitBtn;
 
+        let stockDataChanged = true; // true = ต้อง fetch ใหม่, false = ใช้ cache ได้
 
         // Color mapping for stock icons
         const stockIconColors = [
@@ -2471,9 +2472,11 @@
                     const stockRecordDateEl = document.getElementById('stockRecordDate');
                     if(stockRecordDateEl) stockRecordDateEl.valueAsDate = new Date();
                     stockCalculateBuyAmounts(); 
+                    stockDataChanged = true; // <-- เพิ่มตรงนี้
                     stockFetchAndRenderHistory(); 
                     stockFetchAndRenderSummary(); 
                     stockNavigateTo('stockHistoryView');
+                    populateDividendStockList(); // <-- เพิ่มบรรทัดนี้
                 } else {
                     showNotification(errorNotification, data.message || 'เกิดข้อผิดพลาดในการบันทึกรายการซื้อหุ้น');
                 }
@@ -2559,10 +2562,12 @@
                     if(stockSellForm) stockSellForm.reset();
                     const stockSellDateEl = document.getElementById('stockSellDate');
                     if(stockSellDateEl) stockSellDateEl.valueAsDate = new Date();
-                    stockCalculateSellAmounts(); 
+                    stockCalculateSellAmounts();
+                     stockDataChanged = true; // <-- เพิ่มตรงนี้ 
                     stockFetchAndRenderHistory(); 
                     stockFetchAndRenderSummary(); 
                     stockNavigateTo('stockHistoryView');
+                    populateDividendStockList(); // <-- เพิ่มบรรทัดนี้
                 } else {
                     showNotification(errorNotification, data.message || 'เกิดข้อผิดพลาดในการบันทึกรายการขายหุ้น');
                 }
@@ -2612,6 +2617,19 @@
                 console.error('Error fetching stock history:', error);
                  stockHistoryList.innerHTML = `<p class="text-red-500 text-center py-4">ไม่สามารถโหลดประวัติหุ้นได้: ${error.message}</p>`;
           }
+      }
+
+      async function stockFetchAndRenderHistoryIfNeeded(searchTerm = '') {
+        if (!stockDataChanged && stockTransactions.length > 0) {
+              // ใช้ข้อมูลใน memory
+              calculateCurrentHoldings();
+              stockRenderHistoryList(searchTerm);
+              populateStockSellSymbolDropdown();
+              populateDividendStockList();
+              return;
+         }
+         await stockFetchAndRenderHistory(searchTerm);
+         stockDataChanged = false;
       }
 
 
@@ -2870,6 +2888,7 @@
                 loadingOverlay.classList.add('hidden');
                 if (data.success) {
                     showNotification(successNotification, 'ลบรายการเรียบร้อยแล้ว');
+                    stockDataChanged = true; // <-- เพิ่มตรงนี้
                     stockFetchAndRenderHistory(); 
                     stockFetchAndRenderSummary(); 
                 } else {
@@ -3325,15 +3344,15 @@
                         </div>
                         <div class="stock-details-group">
                             <div class="flex justify-between text-base">
-                                <span class="stock-detail-label">ราคาทุน/หุ้น: </span>
+                                <span class="stock-detail-label">ราคาทุน/หุ้น : </span>
                                 <span class="stock-detail-value">${averageCostPerShareUSD.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} $</span>
                             </div>
                             <div class="flex justify-between text-base">
-                                <span class="stock-detail-label">จำนวนหุ้น: </span>
+                                <span class="stock-detail-label">จำนวนหุ้น : </span>
                                 <span class="stock-detail-value">${data.totalShares.toLocaleString(undefined, {minimumFractionDigits: 7})}</span>
                             </div>
                             <div class="flex justify-between text-base">
-                                <span class="stock-detail-label">รวมทุน: </span>
+                                <span class="stock-detail-label">รวมทุน : </span>
                                 <span class="stock-detail-value">${totalCostForStockUSD.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} $</span>
                             </div>
                         </div>
@@ -3638,6 +3657,21 @@
             stockRenderSummaryContent();
         }
 
+        function updateDividendDropdownIfNeeded() {
+                if (stockDataChanged) {
+                populateDividendStockList();
+                stockDataChanged = false;
+                }
+        }
+
+        function updateSellDropdownIfNeeded() {
+                if (stockDataChanged) {
+                populateStockSellSymbolDropdown();
+                stockDataChanged = false;
+                }
+        }
+
+
         // Main application initialization function.
         function initializeAppComponent() {
             const buyForm = document.getElementById('usdBuyForm'); 
@@ -3940,7 +3974,28 @@
             const refreshStockHistoryButton = document.getElementById('refreshStockHistoryButton');
 
 
-            stockNavItems.forEach(item => item.addEventListener('click', () => stockNavigateTo(item.dataset.stockView)));
+            stockNavItems.forEach(item => {
+                item.addEventListener('click', async function() {
+                        const viewId = this.dataset.stockView;
+                if (viewId === 'stockSettingsView') {
+                  await stockFetchAndRenderHistoryIfNeeded();
+                  updateDividendDropdownIfNeeded();
+                  // ตั้งค่าวันที่เป็นวันปัจจุบัน
+                  const dividendDateInput = document.getElementById('dividendDate');
+                 if (dividendDateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                dividendDateInput.value = today;
+                 }
+                 stockNavigateTo(viewId);
+                } else if (viewId === 'stockRecordView') {
+                 await stockFetchAndRenderHistoryIfNeeded();
+                 updateSellDropdownIfNeeded();
+                 stockNavigateTo(viewId);
+                 } else {
+                 stockNavigateTo(viewId);
+                }
+                });
+            });
             if (stockRecordForm) stockRecordForm.addEventListener('submit', stockHandleRecordSubmit);
             if (stockSellForm) stockSellForm.addEventListener('submit', stockHandleSellRecordSubmit); // Main sell form submit listener
             if (stockSettingsForm) stockSettingsForm.addEventListener('submit', stockHandleSettingsSubmit); 
@@ -4001,7 +4056,10 @@
                 populateStockSellSymbolDropdown(); // Ensure dropdown is populated when switching to sell form
             });
             if (stockBuyFormToggleBtn) stockBuyFormToggleBtn.click();
-            if (refreshStockHistoryButton) refreshStockHistoryButton.addEventListener('click', stockFetchAndRenderHistory);
+             if (refreshStockHistoryButton) refreshStockHistoryButton.addEventListener('click', () => {
+                if (stockHistorySearchInput) stockHistorySearchInput.value = '';
+                 stockFetchAndRenderHistory();
+            }); 
         }
 
 
@@ -4057,37 +4115,31 @@
                     dividendFormResult.textContent = 'บันทึกปันผลสำเร็จ';
                      dividendFormResult.className = 'mt-2 text-center text-sm text-green-500';
                      dividendForm.reset();
-                setTimeout(() => {
+                      // ตั้งค่าวันที่เป็นวันปัจจุบันหลังบันทึกสำเร็จ
+                     const dividendDateInput = document.getElementById('dividendDate');
+                    if (dividendDateInput) {
+                    const today = new Date().toISOString().split('T')[0];
+                    dividendDateInput.value = today;
+                    }
+                    stockDataChanged = true; // <-- เพิ่มตรงนี้
+                    setTimeout(() => {
                      dividendFormResult.textContent = '';
                     dividendFormResult.className = 'mt-2 text-center text-sm';
                     }, 2000); // ข้อความจะหายไปหลัง 2 วินาที
-} else {
-    dividendFormResult.textContent = data.message || 'เกิดข้อผิดพลาดในการบันทึก';
-    dividendFormResult.className = 'mt-2 text-center text-sm text-red-500';
-}
+                } else {
+                    dividendFormResult.textContent = data.message || 'เกิดข้อผิดพลาดในการบันทึก';
+                    dividendFormResult.className = 'mt-2 text-center text-sm text-red-500';
+                }   
                  } catch (error) {
                 dividendFormResult.textContent = 'ไม่สามารถบันทึกข้อมูลได้: ' + error.message;
                 dividendFormResult.className = 'mt-2 text-center text-sm text-red-500';
                 }
              });
          }
-             const stockNavItems = document.querySelectorAll('.stock-nav-item');
-             stockNavItems.forEach(item => {
-             item.addEventListener('click', function() {
-            if (this.dataset.stockView === 'stockSettingsView') {
-                populateDividendStockList();
-                // ตั้งค่าวันที่เป็นวันปัจจุบันทุกครั้งที่เข้า view นี้
-                const dividendDateInput = document.getElementById('dividendDate');
-                if (dividendDateInput) {
-                    const today = new Date().toISOString().split('T')[0];
-                    dividendDateInput.value = today;
-                     }
-                }
-                });
-            });
-        });
-
-
+             
+    });
+        
+ 
 
 
         // Function to navigate between internal stock views
@@ -4445,7 +4497,7 @@
                     <button id="signUpModalSubmitButton" class="login-button">ลงทะเบียน</button>
                 </div>
             </div>
-            <p class="text-center login-version">เวอร์ชัน 1.1</p>
+            <p class="text-center login-version">เวอร์ชัน 1.0</p>
         </div>
     </div>
 
@@ -4535,7 +4587,10 @@ if ('serviceWorker' in navigator) {
             .then(reg => console.log('Service Worker registered:', reg))
             .catch(err => console.log('Service Worker registration failed:', err));
     });
-} 
+}
+
+
+    
 </script>
 
 </body>

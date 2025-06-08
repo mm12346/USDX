@@ -1352,31 +1352,14 @@
 
     </style>
     <script type="module">
+         if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./service-worker.js')
+            .then(reg => console.log('Service Worker registered:', reg))
+            .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
 
-   function handleConnectionChange() {
-    if (!navigator.onLine && !location.pathname.endsWith('offline.html')) {
-        sessionStorage.setItem('lastOnlinePage', location.pathname + location.search + location.hash);
-        window.location.href = 'offline.html';
-    }
-}
-window.addEventListener('offline', handleConnectionChange);
-
-window.addEventListener('online', () => {
-    if (location.pathname.endsWith('offline.html')) {
-        const lastPage = sessionStorage.getItem('lastOnlinePage') || 'index.html';
-        // ใช้ replace เพื่อไม่เก็บ offline.html ใน history และ reload เพื่อดึงข้อมูลใหม่
-        window.location.replace(lastPage);
-        setTimeout(() => location.reload(true), 100);
-    }
-});
-
-if (!navigator.onLine && !location.pathname.endsWith('offline.html')) {
-    sessionStorage.setItem('lastOnlinePage', location.pathname + location.search + location.hash);
-    window.location.href = 'offline.html';
-}
-
-
-        
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         // Updated imports for email/password authentication
@@ -4244,13 +4227,7 @@ if (!navigator.onLine && !location.pathname.endsWith('offline.html')) {
         });
         
          
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./service-worker.js')
-            .then(reg => console.log('Service Worker registered:', reg))
-            .catch(err => console.log('Service Worker registration failed:', err));
-            });
-        }
+       
     </script>
 </head>
 <body>

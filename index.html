@@ -674,52 +674,6 @@
             color: white;
         }
 
-        /* Pull-to-Refresh Styles */
-        .pull-to-refresh-container {
-            position: relative;
-            height: 100%;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .pull-to-refresh-indicator {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            top: -60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #9CA3AF;
-            font-size: 0.875rem;
-            transition: transform 0.2s;
-        }
-
-        .pull-to-refresh-spinner {
-            margin-right: 8px;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #9CA3AF;
-            border-top-color: transparent;
-            border-radius: 50%;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .pull-to-refresh-container.pulling .pull-to-refresh-spinner {
-            opacity: 1;
-        }
-
-        .pull-to-refresh-container.refreshing .pull-to-refresh-spinner {
-            opacity: 1;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
 
         /* Custom Modal for Confirmation */
         .custom-modal-overlay {
@@ -4236,76 +4190,7 @@
 
         let isAppInitialized = false; 
 
-        function initializePullToRefresh() {
-        const containers = document.querySelectorAll('.pull-to-refresh-container');
-        
-        containers.forEach(container => {
-            let touchStart = 0;
-            let touchY = 0;
-            let isPulling = false;
-            let isRefreshing = false;
-
-            container.addEventListener('touchstart', (e) => {
-                touchStart = e.touches[0].clientY;
-                touchY = touchStart;
-            }, { passive: true });
-
-            container.addEventListener('touchmove', (e) => {
-                const touch = e.touches[0];
-                touchY = touch.clientY;
-                const touchDiff = touchY - touchStart;
-                
-                // เช็คว่าอยู่ที่ด้านบนสุดของ container หรือไม่
-                if (container.scrollTop <= 0 && touchDiff > 0 && !isRefreshing) {
-                    isPulling = true;
-                    container.classList.add('pulling');
-                    
-                    if (touchDiff > 60) {
-                        container.querySelector('.pull-to-refresh-text').textContent = 'ปล่อยเพื่อรีเฟรช';
-                    } else {
-                        container.querySelector('.pull-to-refresh-text').textContent = 'ดึงลงเพื่อรีเฟรช';
-                    }
-                    
-                    e.preventDefault();
-                }
-            }, { passive: false });
-
-            container.addEventListener('touchend', async () => {
-                if (isPulling && touchY - touchStart > 60) {
-                    isRefreshing = true;
-                    container.classList.remove('pulling');
-                    container.classList.add('refreshing');
-                    container.querySelector('.pull-to-refresh-text').textContent = 'กำลังรีเฟรช...';
-
-                    // ดำเนินการรีเฟรชข้อมูลตามหน้าที่กำลังแสดงอยู่
-                    if (container.closest('#usdSummarySubView')) {
-                        await fetchSummary();
-                    } else if (container.closest('#usdHistorySubView')) {
-                        await fetchHistory();
-                    } else if (container.closest('#stockSummaryView')) {
-                        await stockFetchAndRenderSummary();
-                    } else if (container.closest('#stockHistoryView')) {
-                        await stockFetchAndRenderHistory();
-                    }
-
-                    // รีเซ็ตสถานะหลังรีเฟรชเสร็จ
-                    setTimeout(() => {
-                        container.classList.remove('refreshing');
-                        isRefreshing = false;
-                        isPulling = false;
-                        container.querySelector('.pull-to-refresh-text').textContent = 'ดึงลงเพื่อรีเฟรช';
-                    }, 1000);
-                } else {
-                    container.classList.remove('pulling');
-                    isPulling = false;
-                }
-            });
-        });
-    }
-
-
         document.addEventListener('DOMContentLoaded', async function() {
-            initializePullToRefresh();
             onAuthStateChanged(window.auth, async (user) => {
                 const displayUserIdElement = document.getElementById('displayUserId');
                 const bottomNav = document.querySelector('.bottom-nav'); 
@@ -4374,11 +4259,13 @@
                     </nav>
                     <div class="flex-grow overflow-y-auto rounded-b-lg shadow-lg p-4 usd-content-bg">
                         <section id="usdSummarySubView">
-                            <div class="pull-to-refresh-container">
-                                <div class="pull-to-refresh-indicator">
-                                    <div class="pull-to-refresh-spinner"></div>
-                                    <span class="pull-to-refresh-text">ปล่อยเพื่อรีเฟรช</span>
-                                </div>
+                            <div class="flex justify-between items-center mb-6 py-2">
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-100">สรุปข้อมูล (สกุลเงิน)</h2>
+                                <button id="refreshSummaryButton" class="text-blue-400 hover:text-blue-300 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                    รีเฟรช
+                                </button>
+                            </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
                                 <div id="totalCard" class="summary-card fade-in"></div>
                                 <div id="customCard" class="summary-card fade-in"></div> <!-- เพิ่มการ์ดใหม่ตรงนี้ -->
@@ -4413,10 +4300,12 @@
                             </div>
                         </section>
                         <section id="usdHistorySubView" class="hidden">
-                        <div class="pull-to-refresh-container">
-                            <div class="pull-to-refresh-indicator">
-                                <div class="pull-to-refresh-spinner"></div>
-                                <span class="pull-to-refresh-text">ปล่อยเพื่อรีเฟรช</span>
+                            <div class="flex justify-between items-center mb-6 py-2">
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-100">ประวัติธุรกรรม (สกุลเงิน)</h2>
+                                <button id="refreshButton" class="text-blue-400 hover:text-blue-300 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                    รีเฟรช
+                                </button>
                             </div>
                             <div id="historyList" class="space-y-3"></div>
                         </section>
@@ -4462,11 +4351,6 @@
                     </nav>
                     <div class="flex-grow overflow-y-auto rounded-b-lg shadow-lg p-4 stock-content-bg">
                         <section id="stockSummaryView">
-                            <div class="pull-to-refresh-container">
-                                <div class="pull-to-refresh-indicator">
-                                    <div class="pull-to-refresh-spinner"></div>
-                                    <span class="pull-to-refresh-text">ปล่อยเพื่อรีเฟรช</span>
-                                </div>
                             <h2 class="text-xl sm:text-2xl font-bold text-gray-100 mb-6 text-center">สรุปพอร์ตหุ้น</h2>
                             <div id="stockSummaryDashboard" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"></div>
                             <h3 class="text-lg sm:text-xl font-bold text-gray-100 mb-4">รายละเอียดหุ้นรายตัว</h3>
@@ -4512,11 +4396,6 @@
                             </div>
                         </section>
                         <section id="stockHistoryView" class="hidden">
-                              <div class="pull-to-refresh-container">
-                                <div class="pull-to-refresh-indicator">
-                                    <div class="pull-to-refresh-spinner"></div>
-                                    <span class="pull-to-refresh-text">ปล่อยเพื่อรีเฟรช</span>
-                                </div>
                             <h2 class="text-xl sm:text-2xl font-bold text-gray-100 mb-6 text-center">ประวัติการซื้อขายหุ้น</h2>
                             <div class="mb-4 flex items-center space-x-2">
                                 <input type="text" id="stockHistorySearchInput" placeholder="ค้นหาด้วยชื่อหุ้นหรือวันที่..." class="stock-form-input flex-grow p-3">

@@ -4217,6 +4217,14 @@
                 if (!isAppInitialized) { initializeAppComponent(); isAppInitialized = true; }
             });
         });
+        
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('Service Worker registered:', reg))
+            .catch(err => console.log('Service Worker registration failed:', err));
+        });
+            }
     </script>
 </head>
 <body>
@@ -4497,7 +4505,7 @@
                     <button id="signUpModalSubmitButton" class="login-button">ลงทะเบียน</button>
                 </div>
             </div>
-            <p class="text-center login-version">เวอร์ชัน 1.5</p>
+            <p class="text-center login-version">เวอร์ชัน 1.6</p>
         </div>
     </div>
 
@@ -4579,19 +4587,6 @@
             </form>
         </div>
     </div>
-
-<script>
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(reg => console.log('Service Worker registered:', reg))
-            .catch(err => console.log('Service Worker registration failed:', err));
-    });
-}
-
-
-    
-</script>
 
 </body>
 </html>

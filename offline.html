@@ -119,9 +119,9 @@
             โปรดตรวจสอบการเชื่อมต่อของคุณแล้วออกเข้าใหม่อีกครั้ง.
         </p>
         <!-- Button to reload the page and attempt reconnection -->
-        <button class="refresh-button" onclick="location.reload()">
-            ลองอีกครั้ง
-        </button>
+        <button class="refresh-button" id="retryBtn">
+    ลองอีกครั้ง
+</button>
     </div>
 
     <script>
@@ -142,7 +142,9 @@
             });
         }
 
-         // ปุ่ม "ลองอีกครั้ง" ตรวจสอบอินเทอร์เน็ตก่อน redirect
+    // ...existing code...
+
+    // ปุ่ม "ลองอีกครั้ง" ตรวจสอบอินเทอร์เน็ตก่อน redirect
     document.getElementById('retryBtn').addEventListener('click', function () {
         if (navigator.onLine) {
             // กลับไปหน้า index.html หรือหน้าก่อนออฟไลน์
@@ -152,6 +154,6 @@
             // ถ้ายังออฟไลน์ ไม่ต้องทำอะไร
         }
     });
-    </script>
+</script>
 </body>
 </html>

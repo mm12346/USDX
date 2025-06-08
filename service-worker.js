@@ -14,21 +14,21 @@ self.addEventListener('install', event => {
   );
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      if (response) return response;
-      return fetch(event.request).catch(() => {
-        if (
-          event.request.destination === 'document' ||
-          event.request.headers.get('accept')?.includes('text/html')
-        ) {
-          return caches.match('offline.html'); // ไม่มี / หรือ ./
-        }
-      });
-    })
-  );
-});
+//self.addEventListener('fetch', event => {
+  //event.respondWith(
+    //caches.match(event.request).then(response => {
+//if (response) return response;
+   //   return fetch(event.request).catch(() => {
+    //    if (
+       //   event.request.destination === 'document' ||
+    //      event.request.headers.get('accept')?.includes('text/html')
+      //  ) {
+     //     return caches.match('offline.html'); // ไม่มี / หรือ ./
+     //   }
+   //   });
+  //  })
+//  );
+//});
 
 self.addEventListener('activate', event => {
   event.waitUntil(

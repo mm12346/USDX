@@ -141,6 +141,17 @@
                     .catch(err => console.log('Service Worker registration failed:', err));
             });
         }
+
+         // ปุ่ม "ลองอีกครั้ง" ตรวจสอบอินเทอร์เน็ตก่อน redirect
+    document.getElementById('retryBtn').addEventListener('click', function () {
+        if (navigator.onLine) {
+            // กลับไปหน้า index.html หรือหน้าก่อนออฟไลน์
+            const lastPage = sessionStorage.getItem('lastOnlinePage') || 'index.html';
+            window.location.replace(lastPage);
+        } else {
+            // ถ้ายังออฟไลน์ ไม่ต้องทำอะไร
+        }
+    });
     </script>
 </body>
 </html>

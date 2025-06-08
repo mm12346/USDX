@@ -4,6 +4,7 @@ const urlsToCache = [
   '/index.html',
   '/app.html',
   '/manifest.json',
+  '/หน้าออฟไลน์.html', // เพิ่มบรรทัดนี้
   // เพิ่มไฟล์ css, js, icon, ฯลฯ ที่ต้องการ cache
 ];
 
@@ -15,11 +16,21 @@ self.addEventListener('install', event => {
 });
 
 // ดักจับ fetch request
-self.addEventListener('fetch', event => {
+sself.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    caches.match(event.request).then(response => {
+      // ถ้าเจอใน cache ให้คืนเลย
+      if (response) return response;
+      // ถ้า fetch ไม่ได้ (offline) และเป็นหน้า html ให้แสดงหน้าออฟไลน์
+      return fetch(event.request).catch(() => {
+        if (event.request.destination === 'document' || event.request.headers.get('accept')?.includes('text/html')) {
+          return caches.match('/หน้าออฟไลน์.html');
+        }
+      });
+    })
   );
 });
+
 
 // อัปเดต service worker
 self.addEventListener('activate', event => {

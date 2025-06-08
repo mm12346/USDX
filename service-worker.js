@@ -1,10 +1,10 @@
-const CACHE_NAME = 'usd-stock-cache-v1.5';
+const CACHE_NAME = 'usd-stock-cache-v1.6';
 const urlsToCache = [
   './',
-  './index.html',
-  './app.html',
-  './manifest.json',
-  './offline.html', // เปลี่ยนเป็น relative path
+  'index.html',
+  'app.html',
+  'manifest.json',
+  'offline.html', // ไม่มี / หรือ ./
   // เพิ่มไฟล์ css, js, icon, ฯลฯ ที่ต้องการ cache
 ];
 
@@ -23,7 +23,7 @@ self.addEventListener('fetch', event => {
           event.request.destination === 'document' ||
           event.request.headers.get('accept')?.includes('text/html')
         ) {
-          return caches.match('./offline.html'); // เปลี่ยนเป็น relative path
+          return caches.match('offline.html'); // ไม่มี / หรือ ./
         }
       });
     })

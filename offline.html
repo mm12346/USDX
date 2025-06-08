@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <!-- Viewport meta tag for responsive design -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>USD & Stock Tracker - ออฟไลน์</title>
+    <!-- Tailwind CSS for utility-first styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for app-wide typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#5C5CFF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="USD & Stock Tracker">
+    <link rel="apple-touch-icon" href="https://placehold.co/192x192/5C5CFF/FFFFFF?text=Icon">
+    <link rel="apple-touch-startup-image" href="https://placehold.co/512x512/5C5CFF/FFFFFF?text=Icon">
+    <style>
+        /* Base styles for the body, ensuring full viewport height and centering content */
+        body {
+            font-family: 'Prompt', sans-serif; /* Primary font for the app */
+            background-color: #121212; /* Dark background color */
+            color: #E5E7EB; /* Light text color */
+            display: flex; /* Use flexbox for easy centering */
+            flex-direction: column; /* Stack content vertically */
+            justify-content: center; /* Center content vertically */
+            align-items: center; /* Center content horizontally */
+            min-height: 100vh; /* Ensure body takes full viewport height */
+            text-align: center; /* Center text within the body */
+            padding: 1.5rem; /* Add padding around the content for mobile safety */
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+
+        /* Container for offline message, styled as a card */
+        .offline-container {
+            background-color: #2C2C2E; /* Dark card background */
+            border-radius: 1rem; /* Rounded corners */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); /* Subtle shadow for depth */
+            padding: 2rem; /* Ample padding inside the card */
+            max-width: 500px; /* Maximum width for larger screens */
+            width: 100%; /* Ensure it takes full width on smaller screens */
+        }
+
+        /* Styling for the offline icon */
+        .offline-icon {
+            font-size: 4rem; /* Large icon size */
+            margin-bottom: 1rem; /* Space below the icon */
+            color: #FBBF24; /* Yellow/Amber color for visibility */
+        }
+
+        /* Styling for the main title */
+        .offline-title {
+            font-size: 1.75rem; /* Responsive font size (text-3xl equivalent) */
+            font-weight: 700; /* Bold font weight */
+            margin-bottom: 1rem; /* Space below the title */
+        }
+
+        /* Styling for the informative message */
+        .offline-message {
+            font-size: 1rem; /* Base font size */
+            margin-bottom: 1.5rem; /* Space below the message */
+            color: #9CA3AF; /* Gray-400 for secondary text */
+        }
+
+        /* Styling for the refresh button */
+        .refresh-button {
+            background-color: #60A5FA; /* Blue background */
+            color: white; /* White text */
+            padding: 0.75rem 1.5rem; /* Padding for touch target */
+            border-radius: 0.5rem; /* Rounded corners */
+            font-weight: 600; /* Semibold font weight */
+            transition: background-color 0.3s ease; /* Smooth hover transition */
+            cursor: pointer; /* Indicate clickable element */
+            border: none; /* Remove default button border */
+        }
+
+        .refresh-button:hover {
+            background-color: #3B82F6; /* Darker blue on hover */
+        }
+
+        /* Light Theme adaptations */
+        body.light-theme {
+            background-color: #F3F4F6; /* Light background */
+            color: #1F2937; /* Dark text */
+        }
+        body.light-theme .offline-container {
+            background-color: #FFFFFF; /* White card background */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Lighter shadow */
+        }
+        body.light-theme .offline-icon {
+            color: #F59E0B; /* Darker amber for light theme */
+        }
+        body.light-theme .offline-title {
+            color: #1F2937; /* Dark text */
+        }
+        body.light-theme .offline-message {
+            color: #4B5563; /* Darker gray */
+        }
+        body.light-theme .refresh-button {
+            background-color: #2563EB; /* Blue-600 for light theme */
+        }
+        body.light-theme .refresh-button:hover {
+            background-color: #1D4ED8; /* Darker blue on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <!-- Offline icon -->
+        <div class="offline-icon">🔌</div>
+        <!-- Title indicating offline status -->
+        <h1 class="offline-title">คุณกำลังออฟไลน์</h1>
+        <!-- Message explaining the situation and suggesting a retry -->
+        <p class="offline-message">
+            ดูเหมือนว่าการเชื่อมต่ออินเทอร์เน็ตของคุณมีปัญหา.
+            โปรดตรวจสอบการเชื่อมต่อของคุณแล้วลองใหม่อีกครั้ง.
+        </p>
+        <!-- Button to reload the page and attempt reconnection -->
+        <button class="refresh-button" onclick="location.reload()">
+            ลองอีกครั้ง
+        </button>
+    </div>
+
+    <script>
+        // Check for light theme preference from localStorage to apply consistent theme
+        document.addEventListener('DOMContentLoaded', () => {
+            const isLightTheme = localStorage.getItem('theme') === 'light';
+            if (isLightTheme) {
+                document.body.classList.add('light-theme');
+            }
+        });
+
+        // Register service worker for PWA functionality if not already registered
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('Service Worker registered:', reg))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>

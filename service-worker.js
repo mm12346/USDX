@@ -1,21 +1,19 @@
 const CACHE_NAME = 'usd-stock-cache-v1.5';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/app.html',
-  '/manifest.json',
-  '/offline.html', // ใช้ชื่อเดียวกับไฟล์จริง
+  './',
+  './index.html',
+  './app.html',
+  './manifest.json',
+  './offline.html', // เปลี่ยนเป็น relative path
   // เพิ่มไฟล์ css, js, icon, ฯลฯ ที่ต้องการ cache
 ];
 
-// ติดตั้ง service worker และ cache ไฟล์
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
 });
 
-// ดักจับ fetch request
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(response => {
@@ -25,14 +23,13 @@ self.addEventListener('fetch', event => {
           event.request.destination === 'document' ||
           event.request.headers.get('accept')?.includes('text/html')
         ) {
-          return caches.match('/offline.html'); // fallback เป็น offline.html
+          return caches.match('./offline.html'); // เปลี่ยนเป็น relative path
         }
       });
     })
   );
 });
 
-// อัปเดต service worker
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>

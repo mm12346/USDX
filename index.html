@@ -1353,22 +1353,20 @@
     </style>
     <script type="module">
 
-    // --- Internet Connection Check and Redirect ---
-    function handleConnectionChange() {
-            if (!navigator.onLine) {
-                // Save current page to sessionStorage for return
-                sessionStorage.setItem('lastOnlinePage', location.pathname + location.search + location.hash);
-                window.location.href = 'offline.html';
-     }
+   function handleConnectionChange() {
+    if (!navigator.onLine && !location.pathname.endsWith('offline.html')) {
+        sessionStorage.setItem('lastOnlinePage', location.pathname + location.search + location.hash);
+        window.location.href = 'offline.html';
     }
-                window.addEventListener('offline', handleConnectionChange);
+}
+window.addEventListener('offline', handleConnectionChange);
 
-        // ถ้าอยู่ใน offline.html และกลับมาออนไลน์ ให้ redirect กลับหน้าหลัก
-                window.addEventListener('online', () => {
-                if (location.pathname.endsWith('offline.html')) {
-        // กลับไปหน้าก่อนออฟไลน์ หรือ index.html
+window.addEventListener('online', () => {
+    if (location.pathname.endsWith('offline.html')) {
         const lastPage = sessionStorage.getItem('lastOnlinePage') || 'index.html';
-        window.location.href = lastPage;
+        // reload เพื่อบังคับโหลดใหม่
+        window.location.replace(lastPage);
+        setTimeout(() => location.reload(), 100); // reload ซ้ำกันพลาด
     }
 });
 

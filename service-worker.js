@@ -1,10 +1,10 @@
-const CACHE_NAME = 'usd-stock-cache-v1.5.1';
+const CACHE_NAME = 'usd-stock-cache-v1.5';
 const urlsToCache = [
   '/',
   '/index.html',
   '/app.html',
   '/manifest.json',
-  '/offline.html', // เพิ่มบรรทัดนี้
+  '/offline.html', // ใช้ชื่อเดียวกับไฟล์จริง
   // เพิ่มไฟล์ css, js, icon, ฯลฯ ที่ต้องการ cache
 ];
 
@@ -16,21 +16,21 @@ self.addEventListener('install', event => {
 });
 
 // ดักจับ fetch request
-sself.addEventListener('fetch', event => {
+self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(response => {
-      // ถ้าเจอใน cache ให้คืนเลย
       if (response) return response;
-      // ถ้า fetch ไม่ได้ (offline) และเป็นหน้า html ให้แสดงหน้าออฟไลน์
       return fetch(event.request).catch(() => {
-        if (event.request.destination === 'document' || event.request.headers.get('accept')?.includes('text/html')) {
-          return caches.match('/offline.html');
+        if (
+          event.request.destination === 'document' ||
+          event.request.headers.get('accept')?.includes('text/html')
+        ) {
+          return caches.match('/offline.html'); // fallback เป็น offline.html
         }
       });
     })
   );
 });
-
 
 // อัปเดต service worker
 self.addEventListener('activate', event => {

@@ -4226,7 +4226,126 @@
             });
         });
         
-         
+         function setupPullToRefresh(container, onRefresh) {
+    let startY = 0;
+    let isPulling = false;
+    let refreshIcon = null;
+    let threshold = 60; // px
+
+    // Create refresh icon element
+        function createRefreshIcon() {
+            if (refreshIcon) return;
+            refreshIcon = document.createElement('div');
+            refreshIcon.style.position = 'absolute';
+            refreshIcon.style.top = '10px';
+            refreshIcon.style.left = '50%';
+            refreshIcon.style.transform = 'translateX(-50%)';
+            refreshIcon.style.zIndex = '999';
+            refreshIcon.style.transition = 'opacity 0.2s';
+            refreshIcon.style.opacity = '0';
+            refreshIcon.innerHTML = `
+                <svg width="32" height="32" fill="none" stroke="#60A5FA" stroke-width="3" viewBox="0 0 24 24">
+                    <path d="M4 4v5h5M20 20v-5h-5"/>
+                    <path d="M5 19A9 9 0 1 1 19 5" />
+                </svg>
+            `;
+            container.parentElement.appendChild(refreshIcon);
+        }
+
+        function showRefreshIcon() {
+            if (refreshIcon) refreshIcon.style.opacity = '1';
+        }
+        function hideRefreshIcon() {
+            if (refreshIcon) refreshIcon.style.opacity = '0';
+        }
+
+        container.addEventListener('touchstart', function(e) {
+            if (container.scrollTop === 0) {
+                startY = e.touches[0].clientY;
+                isPulling = true;
+                createRefreshIcon();
+            }
+        }, { passive: true });
+
+        container.addEventListener('touchmove', function(e) {
+            if (!isPulling) return;
+            let deltaY = e.touches[0].clientY - startY;
+            if (deltaY > 0) {
+                e.preventDefault();
+                showRefreshIcon();
+                refreshIcon.style.transform = `translateX(-50%) translateY(${Math.min(deltaY, threshold)}px)`;
+            }
+        }, { passive: false });
+
+        container.addEventListener('touchend', function(e) {
+            if (!isPulling) return;
+            let deltaY = e.changedTouches[0].clientY - startY;
+            if (deltaY > threshold) {
+                showRefreshIcon();
+                setTimeout(() => {
+                    hideRefreshIcon();
+                    refreshIcon.style.transform = `translateX(-50%)`;
+                }, 800);
+                onRefresh && onRefresh();
+            } else {
+                hideRefreshIcon();
+                refreshIcon.style.transform = `translateX(-50%)`;
+            }
+            isPulling = false;
+        });
+
+        // Optional: Mouse support for desktop
+        let mouseDown = false;
+        container.addEventListener('mousedown', function(e) {
+            if (container.scrollTop === 0) {
+                startY = e.clientY;
+                mouseDown = true;
+                createRefreshIcon();
+            }
+        });
+        container.addEventListener('mousemove', function(e) {
+            if (!mouseDown) return;
+            let deltaY = e.clientY - startY;
+            if (deltaY > 0) {
+                e.preventDefault();
+                showRefreshIcon();
+                refreshIcon.style.transform = `translateX(-50%) translateY(${Math.min(deltaY, threshold)}px)`;
+            }
+        });
+        container.addEventListener('mouseup', function(e) {
+            if (!mouseDown) return;
+            let deltaY = e.clientY - startY;
+            if (deltaY > threshold) {
+                showRefreshIcon();
+                setTimeout(() => {
+                    hideRefreshIcon();
+                    refreshIcon.style.transform = `translateX(-50%)`;
+                }, 800);
+                onRefresh && onRefresh();
+            } else {
+                hideRefreshIcon();
+                refreshIcon.style.transform = `translateX(-50%)`;
+            }
+            mouseDown = false;
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            // USD Slide
+            const usdScroller = document.querySelector('#usdMainView .flex-grow.overflow-y-auto');
+            if (usdScroller) setupPullToRefresh(usdScroller, fetchSummary);
+
+            // Stock Graph Slide (ถ้าต้องการรีโหลดกราฟ)
+            const stockGraphScroller = document.querySelector('#stockGraphView .container');
+            if (stockGraphScroller) setupPullToRefresh(stockGraphScroller, stockLoadTradingViewWidget);
+
+            // Stock Management Slide
+            const stockScroller = document.querySelector('#stockManagementView .flex-grow.overflow-y-auto');
+            if (stockScroller) setupPullToRefresh(stockScroller, stockFetchAndRenderSummary);
+        }, 1000); // รอ DOM พร้อม
+    });
+
        
     </script>
 </head>

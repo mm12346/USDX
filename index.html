@@ -1495,8 +1495,8 @@
         function formatRate(value) {
             if (value === undefined || value === null || isNaN(value)) return '-';
             return parseFloat(value).toLocaleString('th-TH', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                minimumFractionDigits: 3,
+                maximumFractionDigits: 3
             });
         }
 
